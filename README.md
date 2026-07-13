@@ -1,8 +1,8 @@
-# ruv-drone
+# KD-drone
 
 **Industrial cooperative-UAV fleet coordination, in Rust.**
 
-`ruv-drone` is a coordination layer that sits *above* a per-vehicle autopilot
+`KD-drone` is a coordination layer that sits *above* a per-vehicle autopilot
 (PX4 / ArduPilot) and turns a set of drones into a coordinated fleet — formation
 keeping, distributed consensus, cooperative task allocation, collision-avoidant
 planning, and learned multi-agent navigation. It targets **civilian missions**:
@@ -25,7 +25,7 @@ presence detection. Pure Rust, `async`, edge-deployable.
 
 The line this project deliberately stays on:
 
-| Capability | `ruv-drone` (cooperative) | Military "swarming" (out of scope) |
+| Capability | `KD-drone` (cooperative) | Military "swarming" (out of scope) |
 |---|:---:|:---:|
 | Relative positioning — formation keeping (virtual structure, leader-follower, flocking) | ✅ | — |
 | De-confliction — collision avoidance (RRT-APF) | ✅ | — |
@@ -38,14 +38,14 @@ The line this project deliberately stays on:
 
 ## Where it sits
 
-`ruv-drone` is a **coordination layer**, not a flight controller — it complements,
+`KD-drone` is a **coordination layer**, not a flight controller — it complements,
 rather than replaces, your autopilot and transport:
 
 | Layer | Handled by |
 |-------|------------|
 | Per-vehicle flight control | PX4 / ArduPilot (via the `FlightController` trait; sim included) |
 | Transport | MAVLink v2 (HMAC-SHA256 signed) / DDS |
-| **Fleet coordination** | **`ruv-drone`** — consensus, formation, allocation, coverage planning |
+| **Fleet coordination** | **`KD-drone`** — consensus, formation, allocation, coverage planning |
 | Sensing payload (optional) | WiFi-CSI pipeline (ESP32-S3 → edge), multi-drone fusion |
 
 ## Highlights
@@ -160,7 +160,7 @@ single-drone Wi2SAR baseline:
 
 ## Agent harness
 
-`ruv-drone` ships a repo-aware **AI agent harness** in [`agent-harness/`](./agent-harness),
+`KD-drone` ships a repo-aware **AI agent harness** in [`agent-harness/`](./agent-harness),
 minted with [MetaHarness](https://github.com/ruvnet/agent-harness-generator) and wired for
 **all 9 supported hosts** (Claude Code, Codex, OpenCode, Copilot, GitHub Actions, Hermes,
 OpenClaw, pi.dev, RVM). Each host's config is verified against the real host runtime, and
