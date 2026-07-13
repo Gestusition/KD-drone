@@ -3,8 +3,8 @@
 //! Wires together a [`SyntheticCsiGenerator`] and pre-built [`DemoScenario`]
 //! definitions for rapid scenario validation without real hardware.
 
-pub mod synthetic_csi;
 pub mod scenario;
+pub mod synthetic_csi;
 
-pub use synthetic_csi::SyntheticCsiGenerator;
 pub use scenario::{DemoScenario, ScenarioResult};
+pub use synthetic_csi::SyntheticCsiGenerator;

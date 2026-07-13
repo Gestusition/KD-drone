@@ -64,9 +64,14 @@ mod tests {
     fn test_follower_tracks_leader() {
         let mut lf = LeaderFollower::new(NodeId(0));
         lf.add_follower(NodeId(1), (-5.0, 0.0, 0.0));
-        let positions = vec![
-            (NodeId(0), Position3D { x: 10.0, y: 20.0, z: -30.0 }),
-        ];
+        let positions = vec![(
+            NodeId(0),
+            Position3D {
+                x: 10.0,
+                y: 20.0,
+                z: -30.0,
+            },
+        )];
         let target = lf.target_position(NodeId(1), &positions);
         assert!((target.x - 5.0).abs() < 1e-6);
         assert!((target.y - 20.0).abs() < 1e-6);

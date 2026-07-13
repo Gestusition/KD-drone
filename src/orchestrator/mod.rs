@@ -6,13 +6,10 @@
 use crate::{
     config::SwarmConfig,
     failsafe::{FailSafeMachine, FailSafeState},
+    planning::{coverage::CoverageStrategy, probability_grid::ProbabilityGrid},
     sensing::{
         multiview::MultiViewFusion,
         payload::{CsiPayloadPipeline, PayloadConfig},
-    },
-    planning::{
-        coverage::CoverageStrategy,
-        probability_grid::ProbabilityGrid,
     },
     types::{CsiDetection, DroneState, NodeId, Position3D, Velocity3D},
 };
@@ -65,11 +62,16 @@ impl SwarmOrchestrator {
         victims: Vec<Position3D>,
     ) -> Self {
         let grid_w = (config.mission.area_width_m / config.mission.grid_resolution_m).ceil() as u32;
-        let grid_h = (config.mission.area_height_m / config.mission.grid_resolution_m).ceil() as u32;
+        let grid_h =
+            (config.mission.area_height_m / config.mission.grid_resolution_m).ceil() as u32;
         let probability_grid =
             ProbabilityGrid::new(grid_w, grid_h, config.mission.grid_resolution_m);
 
-        let noise_std = config.demo.as_ref().map(|d| d.csi_noise_std).unwrap_or(0.05);
+        let noise_std = config
+            .demo
+            .as_ref()
+            .map(|d| d.csi_noise_std)
+            .unwrap_or(0.05);
         let detection_range = config.planning.csi_scan_width_m;
         let convergence_threshold = config.planning.convergence_threshold;
 
@@ -139,7 +141,8 @@ impl SwarmOrchestrator {
             if detection.confidence >= self.csi_pipeline.config.confidence_threshold {
                 if let Some(victim_pos) = detection.victim_position {
                     let cell = self.pos_to_cell(&victim_pos);
-                    self.probability_grid.update_bayesian(cell, detection.confidence, true);
+                    self.probability_grid
+                        .update_bayesian(cell, detection.confidence, true);
                 }
             }
         }
@@ -155,7 +158,10 @@ impl SwarmOrchestrator {
         self.coverage.phase_transition(&self.probability_grid);
 
         // 6. Move toward next waypoint (proportional navigation for simulation).
-        if let Some(target) = self.coverage.next_target(&self.state, &self.probability_grid) {
+        if let Some(target) = self
+            .coverage
+            .next_target(&self.state, &self.probability_grid)
+        {
             self.move_toward(target, dt_secs);
         }
 
@@ -206,7 +212,10 @@ impl SwarmOrchestrator {
     #[cfg(feature = "ruflo")]
     pub async fn start_trajectory(&mut self, mission_desc: &str) {
         if let Some(ruflo) = &self.ruflo {
-            match ruflo.trajectory_start(mission_desc, "swarm-specialist").await {
+            match ruflo
+                .trajectory_start(mission_desc, "swarm-specialist")
+                .await
+            {
                 Ok(tid) => self.trajectory_id = Some(tid),
                 Err(e) => tracing::warn!("trajectory_start failed: {}", e),
             }
@@ -228,20 +237,24 @@ impl SwarmOrchestrator {
             let summary = crate::ruflo::MissionSummary::from_stats(
                 &self.stats,
                 &self.config.mission.profile,
-                1,  // single drone; caller sets correct count via separate API if needed
+                1, // single drone; caller sets correct count via separate API if needed
                 self.config.mission.area_width_m,
                 self.config.mission.area_height_m,
-                0,  // caller sets victims_total; 0 = unknown
+                0, // caller sets victims_total; 0 = unknown
                 self.probability_grid.coverage_pct(),
             );
             if let Ok(json) = serde_json::to_string(&summary) {
-                let _ = ruflo.store_mission(mission_key, &json, "swarm-missions").await;
+                let _ = ruflo
+                    .store_mission(mission_key, &json, "swarm-missions")
+                    .await;
             }
-            let _ = ruflo.store_pattern(
-                &summary.to_pattern_description(),
-                summary.pattern_type(),
-                summary.pattern_confidence(),
-            ).await;
+            let _ = ruflo
+                .store_pattern(
+                    &summary.to_pattern_description(),
+                    summary.pattern_type(),
+                    summary.pattern_confidence(),
+                )
+                .await;
         }
     }
 
@@ -261,10 +274,7 @@ impl SwarmOrchestrator {
             );
             match ruflo.mavlink_is_safe(&repr).await {
                 Ok(false) => {
-                    tracing::warn!(
-                        "aidefence rejected peer detection from {:?}",
-                        det.drone_id
-                    );
+                    tracing::warn!("aidefence rejected peer detection from {:?}", det.drone_id);
                     return false;
                 }
                 Err(e) => tracing::debug!("aidefence check failed (proceeding): {}", e),
@@ -331,15 +341,25 @@ mod tests {
         SwarmOrchestrator::new_demo(
             NodeId(node_id),
             cfg,
-            Position3D { x: 10.0 * node_id as f64, y: 0.0, z: -30.0 },
+            Position3D {
+                x: 10.0 * node_id as f64,
+                y: 0.0,
+                z: -30.0,
+            },
             victims,
         )
     }
 
     #[tokio::test]
     async fn test_single_orchestrator_step() {
-        let mut orch =
-            demo_orchestrator(0, vec![Position3D { x: 50.0, y: 50.0, z: 0.0 }]);
+        let mut orch = demo_orchestrator(
+            0,
+            vec![Position3D {
+                x: 50.0,
+                y: 50.0,
+                z: 0.0,
+            }],
+        );
         let state = orch.step(0.1, true).await;
         assert_eq!(state, FailSafeState::Nominal);
         assert_eq!(orch.stats.steps, 1);
@@ -358,14 +378,23 @@ mod tests {
         std::thread::sleep(std::time::Duration::from_millis(5));
 
         let state = orch.step(0.1, false).await;
-        assert_ne!(state, FailSafeState::Nominal, "link loss should trigger failsafe");
+        assert_ne!(
+            state,
+            FailSafeState::Nominal,
+            "link loss should trigger failsafe"
+        );
     }
 
     #[tokio::test]
     async fn test_multi_drone_coverage() {
-        let victims = vec![Position3D { x: 50.0, y: 50.0, z: 0.0 }];
-        let mut drones: Vec<SwarmOrchestrator> =
-            (0..4).map(|i| demo_orchestrator(i, victims.clone())).collect();
+        let victims = vec![Position3D {
+            x: 50.0,
+            y: 50.0,
+            z: 0.0,
+        }];
+        let mut drones: Vec<SwarmOrchestrator> = (0..4)
+            .map(|i| demo_orchestrator(i, victims.clone()))
+            .collect();
 
         // 50 steps × 0.1 s dt = 5 simulated seconds
         for _ in 0..50 {
@@ -378,7 +407,10 @@ mod tests {
         assert!(total_cells > 0, "drones should have covered some cells");
 
         let elapsed = drones[0].stats.elapsed_secs;
-        assert!((elapsed - 5.0).abs() < 0.01, "elapsed should be ~5 s, got {elapsed}");
+        assert!(
+            (elapsed - 5.0).abs() < 0.01,
+            "elapsed should be ~5 s, got {elapsed}"
+        );
     }
 
     #[tokio::test]
@@ -410,6 +442,9 @@ mod tests {
                 orch.probability_grid.mark_scanned((x, y));
             }
         }
-        assert!(orch.is_mission_complete(), "should be complete at 100% coverage");
+        assert!(
+            orch.is_mission_complete(),
+            "should be complete at 100% coverage"
+        );
     }
 }

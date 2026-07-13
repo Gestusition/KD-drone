@@ -84,7 +84,11 @@ pub fn stratified_bootstrap_ci(
     let point = iqm(&pooled);
 
     if pooled.is_empty() || n_boot == 0 {
-        return ConfidenceInterval { point, lo: point, hi: point };
+        return ConfidenceInterval {
+            point,
+            lo: point,
+            hi: point,
+        };
     }
 
     let mut rng = Lcg::new(seed);
@@ -176,10 +180,7 @@ mod tests {
 
     #[test]
     fn test_bootstrap_ci_brackets_point() {
-        let strata = vec![
-            vec![1.0, 2.0, 3.0, 4.0, 5.0],
-            vec![2.0, 3.0, 4.0, 5.0, 6.0],
-        ];
+        let strata = vec![vec![1.0, 2.0, 3.0, 4.0, 5.0], vec![2.0, 3.0, 4.0, 5.0, 6.0]];
         let ci = stratified_bootstrap_ci(&strata, 500, 42);
         assert!(ci.lo <= ci.point, "lo ≤ point: {} ≤ {}", ci.lo, ci.point);
         assert!(ci.point <= ci.hi, "point ≤ hi: {} ≤ {}", ci.point, ci.hi);

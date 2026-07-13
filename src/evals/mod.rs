@@ -7,13 +7,13 @@
 //! Stage 2 (Gazebo/PX4 SITL high-fidelity, false-alarm + collision rate on the
 //! median seeds) is a follow-on — see ADR-171 §6.1.
 pub mod gdop;
-pub mod stats;
 pub mod metrics;
-pub mod runner;
 pub mod report;
+pub mod runner;
+pub mod stats;
 
 pub use gdop::gdop;
-pub use stats::{iqm, stratified_bootstrap_ci, ConfidenceInterval};
-pub use metrics::{EpisodeMetrics, AggregateMetrics};
-pub use runner::{EvalConfig, NoiseLevel, run_matrix};
+pub use metrics::{AggregateMetrics, EpisodeMetrics};
 pub use report::render_results_md;
+pub use runner::{run_matrix, EvalConfig, NoiseLevel};
+pub use stats::{iqm, stratified_bootstrap_ci, ConfidenceInterval};

@@ -67,9 +67,9 @@ pub struct PatternContext<'a> {
     pub current: Position3D,
     pub area_w: f64,
     pub area_h: f64,
-    pub altitude_z: f64,      // flight z (negative NED)
-    pub scan_width_m: f64,    // strip spacing
-    pub step: u64,            // tick counter (for deterministic pseudo-random patterns)
+    pub altitude_z: f64,           // flight z (negative NED)
+    pub scan_width_m: f64,         // strip spacing
+    pub step: u64,                 // tick counter (for deterministic pseudo-random patterns)
     pub visited: &'a [Position3D], // recently visited cell centres (for pheromone/potential)
     pub peers: &'a [Position3D],   // peer positions (for potential-field repulsion)
 }
@@ -128,7 +128,11 @@ fn serpentine_in_region(
     let y = y.min(y1);
 
     // Serpentine: even rows L→R, odd rows R→L.
-    let along = if row.is_multiple_of(2) { col } else { cols - 1 - col };
+    let along = if row.is_multiple_of(2) {
+        col
+    } else {
+        cols - 1 - col
+    };
     let x = x0 + (along as f64 + 0.5) * scan_width_m;
     let x = x.min(x1);
 
@@ -137,14 +141,7 @@ fn serpentine_in_region(
 
 /// Classic full-area serpentine lawnmower (drones may overlap — baseline).
 fn boustrophedon(ctx: &PatternContext) -> Position3D {
-    let (x, y) = serpentine_in_region(
-        0.0,
-        ctx.area_w,
-        0.0,
-        ctx.area_h,
-        ctx.scan_width_m,
-        ctx.step,
-    );
+    let (x, y) = serpentine_in_region(0.0, ctx.area_w, 0.0, ctx.area_h, ctx.scan_width_m, ctx.step);
     clamp_to_area(x, y, ctx)
 }
 
@@ -161,8 +158,7 @@ fn partitioned_lawnmower(ctx: &PatternContext) -> Position3D {
     let x0 = i as f64 * strip_w;
     let x1 = x0 + strip_w;
 
-    let (x, y) =
-        serpentine_in_region(x0, x1, 0.0, ctx.area_h, ctx.scan_width_m, ctx.step);
+    let (x, y) = serpentine_in_region(x0, x1, 0.0, ctx.area_h, ctx.scan_width_m, ctx.step);
     clamp_to_area(x, y, ctx)
 }
 
@@ -361,7 +357,10 @@ mod tests {
         // And they never share an x position (disjoint strips → no overlap).
         for &a in &d0_xs {
             for &b in &d1_xs {
-                assert!(a < b || (a <= mid && b >= mid), "strips overlap: {a} vs {b}");
+                assert!(
+                    a < b || (a <= mid && b >= mid),
+                    "strips overlap: {a} vs {b}"
+                );
             }
         }
     }
@@ -369,12 +368,28 @@ mod tests {
     #[test]
     fn test_all_patterns_in_bounds() {
         let visited = [
-            Position3D { x: 10.0, y: 10.0, z: -20.0 },
-            Position3D { x: 50.0, y: 40.0, z: -20.0 },
+            Position3D {
+                x: 10.0,
+                y: 10.0,
+                z: -20.0,
+            },
+            Position3D {
+                x: 50.0,
+                y: 40.0,
+                z: -20.0,
+            },
         ];
-        let peers = [Position3D { x: 30.0, y: 20.0, z: -20.0 }];
+        let peers = [Position3D {
+            x: 30.0,
+            y: 20.0,
+            z: -20.0,
+        }];
         for pat in FlightPattern::all() {
-            let mut current = Position3D { x: 25.0, y: 25.0, z: -20.0 };
+            let mut current = Position3D {
+                x: 25.0,
+                y: 25.0,
+                z: -20.0,
+            };
             for s in 0..20u64 {
                 let c = ctx(1, 4, s, current, &visited, &peers);
                 let t = pat.next_target(&c);

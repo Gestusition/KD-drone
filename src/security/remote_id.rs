@@ -21,7 +21,7 @@ use serde::{Deserialize, Serialize};
 /// WGS84 (it comes from the operator's GNSS, not the local frame).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RemoteIdBroadcast {
-    pub uas_id: [u8; 20],        // 20-byte UAS ID (ANSI/CTA-2063-A)
+    pub uas_id: [u8; 20], // 20-byte UAS ID (ANSI/CTA-2063-A)
     /// Operator latitude (WGS84 degrees) — real geodetic position.
     pub operator_lat: f64,
     /// Operator longitude (WGS84 degrees) — real geodetic position.

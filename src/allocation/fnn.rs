@@ -37,7 +37,13 @@ impl FnnScorer {
         }
 
         // Layer 3: 8 → 1 (sigmoid)
-        let z3: f32 = self.w3.iter().zip(h2.iter()).map(|(w, x)| w * x).sum::<f32>() + self.b3;
+        let z3: f32 = self
+            .w3
+            .iter()
+            .zip(h2.iter())
+            .map(|(w, x)| w * x)
+            .sum::<f32>()
+            + self.b3;
         sigmoid(z3)
     }
 

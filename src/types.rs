@@ -31,7 +31,11 @@ impl Position3D {
     }
 
     pub fn zero() -> Self {
-        Self { x: 0.0, y: 0.0, z: 0.0 }
+        Self {
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+        }
     }
 }
 
@@ -51,13 +55,21 @@ impl Velocity3D {
 
 impl From<(f64, f64, f64)> for Position3D {
     fn from(t: (f64, f64, f64)) -> Self {
-        Self { x: t.0, y: t.1, z: t.2 }
+        Self {
+            x: t.0,
+            y: t.1,
+            z: t.2,
+        }
     }
 }
 
 impl From<Velocity3D> for Position3D {
     fn from(v: Velocity3D) -> Self {
-        Self { x: v.vx, y: v.vy, z: v.vz }
+        Self {
+            x: v.vx,
+            y: v.vy,
+            z: v.vz,
+        }
     }
 }
 
@@ -69,8 +81,8 @@ pub struct DroneState {
     pub velocity: Velocity3D,
     pub heading_rad: f64,
     pub altitude_agl_m: f64,
-    pub battery_pct: f32,     // 0.0–100.0
-    pub link_quality: f32,    // 0.0–1.0 (RSSI normalised)
+    pub battery_pct: f32,  // 0.0–100.0
+    pub link_quality: f32, // 0.0–1.0 (RSSI normalised)
     pub timestamp_ms: u64,
 }
 
@@ -94,7 +106,7 @@ impl DroneState {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CsiDetection {
     pub drone_id: NodeId,
-    pub confidence: f32,      // 0.0–1.0
+    pub confidence: f32, // 0.0–1.0
     pub victim_position: Option<Position3D>,
     pub timestamp_ms: u64,
 }
@@ -104,8 +116,8 @@ pub struct CsiDetection {
 pub struct GridCell {
     pub x_idx: u32,
     pub y_idx: u32,
-    pub victim_probability: f32,   // Bayesian posterior
-    pub pheromone: f32,            // stigmergic coverage signal
+    pub victim_probability: f32, // Bayesian posterior
+    pub pheromone: f32,          // stigmergic coverage signal
     pub last_scanned_ms: u64,
 }
 

@@ -1,7 +1,7 @@
 //! Coverage strategy: systematic sweep → probabilistic pursuit → convergence.
 
-use crate::types::{DroneState, NodeId, Position3D};
 use super::probability_grid::ProbabilityGrid;
+use crate::types::{DroneState, NodeId, Position3D};
 use std::collections::HashMap;
 
 /// Phase of the coverage mission.
@@ -70,29 +70,23 @@ impl CoverageStrategy {
     pub fn next_target(&self, state: &DroneState, grid: &ProbabilityGrid) -> Option<Position3D> {
         let r = grid.cell_size_m;
         match &self.phase {
-            Phase::Systematic => {
-                grid.next_systematic_cell(state).map(|(cx, cy)| Position3D {
+            Phase::Systematic => grid.next_systematic_cell(state).map(|(cx, cy)| Position3D {
+                x: cx as f64 * r + r / 2.0,
+                y: cy as f64 * r + r / 2.0,
+                z: state.position.z,
+            }),
+            Phase::ProbabilisticPursuit | Phase::Convergence(_) => grid
+                .highest_priority_unscanned()
+                .map(|(cx, cy)| Position3D {
                     x: cx as f64 * r + r / 2.0,
                     y: cy as f64 * r + r / 2.0,
                     z: state.position.z,
-                })
-            }
-            Phase::ProbabilisticPursuit | Phase::Convergence(_) => {
-                grid.highest_priority_unscanned().map(|(cx, cy)| Position3D {
-                    x: cx as f64 * r + r / 2.0,
-                    y: cy as f64 * r + r / 2.0,
-                    z: state.position.z,
-                })
-            }
+                }),
         }
     }
 
     /// Transition to next phase based on grid state, guarded by a threshold.
-    pub fn phase_transition_with_threshold(
-        &mut self,
-        grid: &ProbabilityGrid,
-        _threshold: f32,
-    ) {
+    pub fn phase_transition_with_threshold(&mut self, grid: &ProbabilityGrid, _threshold: f32) {
         self.phase_transition(grid);
     }
 
@@ -106,14 +100,9 @@ impl CoverageStrategy {
             .fold(0.0_f32, f32::max);
 
         self.phase = match &self.phase {
-            Phase::Systematic if max_p >= self.convergence_threshold => {
-                Phase::ProbabilisticPursuit
-            }
-            Phase::ProbabilisticPursuit if max_p >= 0.9 => {
-                Phase::Convergence(vec![])
-            }
+            Phase::Systematic if max_p >= self.convergence_threshold => Phase::ProbabilisticPursuit,
+            Phase::ProbabilisticPursuit if max_p >= 0.9 => Phase::Convergence(vec![]),
             other => other.clone(),
         };
     }
 }
-

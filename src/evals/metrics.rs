@@ -101,11 +101,7 @@ impl AggregateMetrics {
             ),
             detection_rate,
             mean_gdop,
-            return_iqm: stratified_bootstrap_ci(
-                &return_strata,
-                N_BOOT,
-                boot_seed.wrapping_add(2),
-            ),
+            return_iqm: stratified_bootstrap_ci(&return_strata, N_BOOT, boot_seed.wrapping_add(2)),
             n_episodes: total,
         }
     }
@@ -131,10 +127,7 @@ mod tests {
     #[test]
     fn test_aggregate_detection_rate_and_shape() {
         let per_seed = vec![
-            vec![
-                ep(0.8, Some(1.5), 80.0, true),
-                ep(0.7, None, 70.0, false),
-            ],
+            vec![ep(0.8, Some(1.5), 80.0, true), ep(0.7, None, 70.0, false)],
             vec![
                 ep(0.9, Some(2.0), 90.0, true),
                 ep(0.85, Some(1.0), 85.0, true),

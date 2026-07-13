@@ -8,8 +8,8 @@ pub struct VoxelCell {
     pub x: f32,
     pub y: f32,
     pub z: f32,
-    pub occupancy: f32,      // 0.0 = free, 1.0 = occupied
-    pub semantic_class: u8,  // 0=free, 1=wall, 2=floor, 3=person, 4=furniture
+    pub occupancy: f32,     // 0.0 = free, 1.0 = occupied
+    pub semantic_class: u8, // 0=free, 1=wall, 2=floor, 3=person, 4=furniture
 }
 
 /// Occupancy prior produced by OccWorld inference (ADR-147).
@@ -23,7 +23,12 @@ pub struct OccupancyPrior {
 impl OccupancyPrior {
     /// Extract free-space cells (occupancy < threshold) at a given altitude band.
     /// Used by RRT* as valid sampling space.
-    pub fn free_cells_at_altitude(&self, target_z: f32, band_m: f32, threshold: f32) -> Vec<(f32, f32)> {
+    pub fn free_cells_at_altitude(
+        &self,
+        target_z: f32,
+        band_m: f32,
+        threshold: f32,
+    ) -> Vec<(f32, f32)> {
         self.voxels
             .iter()
             .filter(|v| v.occupancy < threshold && (v.z - target_z).abs() < band_m)
@@ -36,7 +41,11 @@ impl OccupancyPrior {
         self.voxels
             .iter()
             .filter(|v| v.occupancy >= threshold)
-            .map(|v| Position3D { x: v.x as f64, y: v.y as f64, z: v.z as f64 })
+            .map(|v| Position3D {
+                x: v.x as f64,
+                y: v.y as f64,
+                z: v.z as f64,
+            })
             .collect()
     }
 
@@ -46,7 +55,11 @@ impl OccupancyPrior {
         self.voxels
             .iter()
             .filter(|v| v.semantic_class == 3)
-            .map(|v| Position3D { x: v.x as f64, y: v.y as f64, z: v.z as f64 })
+            .map(|v| Position3D {
+                x: v.x as f64,
+                y: v.y as f64,
+                z: v.z as f64,
+            })
             .collect()
     }
 
@@ -60,7 +73,8 @@ impl OccupancyPrior {
         let steps = (room / resolution_m) as i32;
         for xi in 0..steps {
             for yi in 0..steps {
-                for zi in 0..15i32 { // 3 m height (15 × 0.2 m slices)
+                for zi in 0..15i32 {
+                    // 3 m height (15 × 0.2 m slices)
                     let x = xi as f32 * resolution_m - room / 2.0;
                     let y = yi as f32 * resolution_m - room / 2.0;
                     let z = zi as f32 * resolution_m;
@@ -70,12 +84,23 @@ impl OccupancyPrior {
                         y,
                         z,
                         occupancy: if is_wall { 1.0 } else { 0.0 },
-                        semantic_class: if is_wall { 1 } else if zi == 0 { 2 } else { 0 },
+                        semantic_class: if is_wall {
+                            1
+                        } else if zi == 0 {
+                            2
+                        } else {
+                            0
+                        },
                     });
                 }
             }
         }
-        OccupancyPrior { voxels, resolution_m, origin: (0.0, 0.0, 0.0), timestamp_ms: 0 }
+        OccupancyPrior {
+            voxels,
+            resolution_m,
+            origin: (0.0, 0.0, 0.0),
+            timestamp_ms: 0,
+        }
     }
 }
 
@@ -91,13 +116,19 @@ pub struct OccWorldBridge {
 
 impl Default for OccWorldBridge {
     fn default() -> Self {
-        Self { script_path: PathBuf::from("occworld_infer.py"), last_prior: None }
+        Self {
+            script_path: PathBuf::from("occworld_infer.py"),
+            last_prior: None,
+        }
     }
 }
 
 impl OccWorldBridge {
     pub fn new(script_path: PathBuf) -> Self {
-        Self { script_path, last_prior: None }
+        Self {
+            script_path,
+            last_prior: None,
+        }
     }
 
     /// Run a demo-mode inference using the synthetic room prior.

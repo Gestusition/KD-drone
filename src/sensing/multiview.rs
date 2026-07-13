@@ -1,4 +1,4 @@
-use crate::types::{NodeId, Position3D, CsiDetection};
+use crate::types::{CsiDetection, NodeId, Position3D};
 
 /// A fused detection result from multiple drone viewpoints.
 #[derive(Debug, Clone)]
@@ -39,7 +39,11 @@ fn geometric_diversity_index(positions: &[Position3D]) -> f64 {
         }
     }
 
-    if pairs > 0 { total_angle / pairs as f64 } else { 0.0 }
+    if pairs > 0 {
+        total_angle / pairs as f64
+    } else {
+        0.0
+    }
 }
 
 /// Multi-drone CSI fusion via confidence-weighted position averaging with geometric bias.
@@ -52,7 +56,10 @@ pub struct MultiViewFusion {
 
 impl Default for MultiViewFusion {
     fn default() -> Self {
-        Self { min_viewpoints: 2, min_confidence: 0.5 }
+        Self {
+            min_viewpoints: 2,
+            min_confidence: 0.5,
+        }
     }
 }
 
@@ -125,7 +132,11 @@ impl MultiViewFusion {
 
         Some(FusedDetection {
             confidence: fused_conf,
-            estimated_position: Position3D { x: fused_x, y: fused_y, z: fused_z },
+            estimated_position: Position3D {
+                x: fused_x,
+                y: fused_y,
+                z: fused_z,
+            },
             contributing_drones: valid.iter().map(|(d, _)| d.drone_id).collect(),
             uncertainty_m,
         })
@@ -138,45 +149,92 @@ mod tests {
 
     #[test]
     fn test_fusion_single_view_insufficient() {
-        let fusion = MultiViewFusion { min_viewpoints: 2, min_confidence: 0.5 };
+        let fusion = MultiViewFusion {
+            min_viewpoints: 2,
+            min_confidence: 0.5,
+        };
         let det = CsiDetection {
             drone_id: NodeId(0),
             confidence: 0.9,
-            victim_position: Some(Position3D { x: 10.0, y: 5.0, z: 0.0 }),
+            victim_position: Some(Position3D {
+                x: 10.0,
+                y: 5.0,
+                z: 0.0,
+            }),
             timestamp_ms: 0,
         };
         let result = fusion.fuse(&[det], &[(NodeId(0), Position3D::zero())]);
-        assert!(result.is_none(), "single viewpoint should not produce fusion");
+        assert!(
+            result.is_none(),
+            "single viewpoint should not produce fusion"
+        );
     }
 
     #[test]
     fn test_fusion_three_views() {
         let fusion = MultiViewFusion::default();
-        let victim = Position3D { x: 50.0, y: 50.0, z: 0.0 };
+        let victim = Position3D {
+            x: 50.0,
+            y: 50.0,
+            z: 0.0,
+        };
         let detections = vec![
             CsiDetection {
                 drone_id: NodeId(0),
                 confidence: 0.85,
-                victim_position: Some(Position3D { x: 51.0, y: 49.0, z: 0.0 }),
+                victim_position: Some(Position3D {
+                    x: 51.0,
+                    y: 49.0,
+                    z: 0.0,
+                }),
                 timestamp_ms: 0,
             },
             CsiDetection {
                 drone_id: NodeId(1),
                 confidence: 0.78,
-                victim_position: Some(Position3D { x: 49.0, y: 51.0, z: 0.0 }),
+                victim_position: Some(Position3D {
+                    x: 49.0,
+                    y: 51.0,
+                    z: 0.0,
+                }),
                 timestamp_ms: 0,
             },
             CsiDetection {
                 drone_id: NodeId(2),
                 confidence: 0.92,
-                victim_position: Some(Position3D { x: 50.0, y: 50.0, z: 0.0 }),
+                victim_position: Some(Position3D {
+                    x: 50.0,
+                    y: 50.0,
+                    z: 0.0,
+                }),
                 timestamp_ms: 0,
             },
         ];
         let positions = vec![
-            (NodeId(0), Position3D { x: 0.0, y: 0.0, z: -30.0 }),
-            (NodeId(1), Position3D { x: 100.0, y: 0.0, z: -30.0 }),
-            (NodeId(2), Position3D { x: 50.0, y: 86.6, z: -30.0 }), // equilateral triangle
+            (
+                NodeId(0),
+                Position3D {
+                    x: 0.0,
+                    y: 0.0,
+                    z: -30.0,
+                },
+            ),
+            (
+                NodeId(1),
+                Position3D {
+                    x: 100.0,
+                    y: 0.0,
+                    z: -30.0,
+                },
+            ),
+            (
+                NodeId(2),
+                Position3D {
+                    x: 50.0,
+                    y: 86.6,
+                    z: -30.0,
+                },
+            ), // equilateral triangle
         ];
 
         let result = fusion.fuse(&detections, &positions).unwrap();
@@ -198,31 +256,67 @@ mod tests {
     /// into the confidence-weighted average and the fused position is NaN.
     #[test]
     fn test_nan_victim_position_dropped_from_fusion() {
-        let fusion = MultiViewFusion { min_viewpoints: 2, min_confidence: 0.5 };
+        let fusion = MultiViewFusion {
+            min_viewpoints: 2,
+            min_confidence: 0.5,
+        };
         let detections = vec![
             CsiDetection {
                 drone_id: NodeId(0),
                 confidence: 0.9,
-                victim_position: Some(Position3D { x: 50.0, y: 50.0, z: 0.0 }),
+                victim_position: Some(Position3D {
+                    x: 50.0,
+                    y: 50.0,
+                    z: 0.0,
+                }),
                 timestamp_ms: 0,
             },
             CsiDetection {
                 drone_id: NodeId(1),
                 confidence: 0.9,
-                victim_position: Some(Position3D { x: f64::NAN, y: 50.0, z: 0.0 }),
+                victim_position: Some(Position3D {
+                    x: f64::NAN,
+                    y: 50.0,
+                    z: 0.0,
+                }),
                 timestamp_ms: 0,
             },
             CsiDetection {
                 drone_id: NodeId(2),
                 confidence: 0.9,
-                victim_position: Some(Position3D { x: 50.0, y: 50.0, z: 0.0 }),
+                victim_position: Some(Position3D {
+                    x: 50.0,
+                    y: 50.0,
+                    z: 0.0,
+                }),
                 timestamp_ms: 0,
             },
         ];
         let positions = vec![
-            (NodeId(0), Position3D { x: 0.0, y: 0.0, z: -30.0 }),
-            (NodeId(1), Position3D { x: 100.0, y: 0.0, z: -30.0 }),
-            (NodeId(2), Position3D { x: 50.0, y: 86.6, z: -30.0 }),
+            (
+                NodeId(0),
+                Position3D {
+                    x: 0.0,
+                    y: 0.0,
+                    z: -30.0,
+                },
+            ),
+            (
+                NodeId(1),
+                Position3D {
+                    x: 100.0,
+                    y: 0.0,
+                    z: -30.0,
+                },
+            ),
+            (
+                NodeId(2),
+                Position3D {
+                    x: 50.0,
+                    y: 86.6,
+                    z: -30.0,
+                },
+            ),
         ];
         // Two finite viewpoints remain → still fuses, but the result must be finite.
         let result = fusion.fuse(&detections, &positions).unwrap();
@@ -232,6 +326,9 @@ mod tests {
                 && result.estimated_position.z.is_finite(),
             "fused position must be finite when a NaN detection is present"
         );
-        assert!(!result.contributing_drones.contains(&NodeId(1)), "NaN detection must be excluded");
+        assert!(
+            !result.contributing_drones.contains(&NodeId(1)),
+            "NaN detection must be excluded"
+        );
     }
 }

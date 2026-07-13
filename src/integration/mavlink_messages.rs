@@ -3,8 +3,8 @@
 //! Message IDs follow MAVLink custom dialect convention (50000+).
 //! All messages are signed via `security::mavlink_signing::MavlinkSigner`.
 
+use crate::types::{CsiDetection, NodeId, Position3D};
 use serde::{Deserialize, Serialize};
-use crate::types::{NodeId, Position3D, CsiDetection};
 
 /// MAVLink message ID base for swarm custom dialect.
 pub const SWARM_DIALECT_BASE: u32 = 50000;
@@ -101,9 +101,9 @@ impl SwarmNodeState {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SwarmCsiReport {
     pub node_id: u32,
-    pub confidence_u8: u8,       // confidence × 255
+    pub confidence_u8: u8, // confidence × 255
     pub has_position: bool,
-    pub victim_north_mm: i32,    // estimated victim position
+    pub victim_north_mm: i32, // estimated victim position
     pub victim_east_mm: i32,
     pub victim_down_mm: i32,
     pub timestamp_ms: u32,
@@ -111,8 +111,15 @@ pub struct SwarmCsiReport {
 
 impl SwarmCsiReport {
     pub fn from_detection(det: &CsiDetection) -> Self {
-        let (n, e, d) = det.victim_position
-            .map(|p| ((p.x * 1000.0) as i32, (p.y * 1000.0) as i32, (p.z * 1000.0) as i32))
+        let (n, e, d) = det
+            .victim_position
+            .map(|p| {
+                (
+                    (p.x * 1000.0) as i32,
+                    (p.y * 1000.0) as i32,
+                    (p.z * 1000.0) as i32,
+                )
+            })
             .unwrap_or((0, 0, 0));
         Self {
             node_id: det.drone_id.0,
@@ -150,14 +157,14 @@ pub struct SwarmClusterHeartbeat {
     pub raft_term: u64,
     pub cluster_size: u8,
     pub active_drones: u8,
-    pub mission_phase: u8,       // 0=Systematic, 1=ProbabilisticPursuit, 2=Convergence
+    pub mission_phase: u8, // 0=Systematic, 1=ProbabilisticPursuit, 2=Convergence
     pub timestamp_ms: u32,
 }
 
 /// SWARM_VICTIM_CONFIRMED (50005): 3+ viewpoints confirm victim location.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SwarmVictimConfirmed {
-    pub victim_id: u8,           // sequential victim counter
+    pub victim_id: u8, // sequential victim counter
     pub victim_north_mm: i32,
     pub victim_east_mm: i32,
     pub victim_down_mm: i32,
@@ -175,8 +182,16 @@ mod tests {
     fn make_state() -> DroneState {
         DroneState {
             id: NodeId(3),
-            position: Position3D { x: 100.5, y: 200.25, z: -30.0 },
-            velocity: Velocity3D { vx: 5.0, vy: 0.0, vz: 0.0 },
+            position: Position3D {
+                x: 100.5,
+                y: 200.25,
+                z: -30.0,
+            },
+            velocity: Velocity3D {
+                vx: 5.0,
+                vy: 0.0,
+                vz: 0.0,
+            },
             heading_rad: std::f64::consts::PI / 4.0,
             altitude_agl_m: 30.0,
             battery_pct: 78.5,
@@ -192,7 +207,7 @@ mod tests {
         let encoded = msg.encode();
         let decoded = SwarmNodeState::decode(&encoded);
         assert_eq!(decoded.node_id, 3);
-        assert_eq!(decoded.pos_north_mm, 100500);  // 100.5 m × 1000
+        assert_eq!(decoded.pos_north_mm, 100500); // 100.5 m × 1000
         assert_eq!(decoded.failsafe_state, 0);
     }
 
@@ -201,12 +216,19 @@ mod tests {
         let det = CsiDetection {
             drone_id: NodeId(1),
             confidence: 0.85,
-            victim_position: Some(Position3D { x: 50.0, y: 75.0, z: 0.0 }),
+            victim_position: Some(Position3D {
+                x: 50.0,
+                y: 75.0,
+                z: 0.0,
+            }),
             timestamp_ms: 9999,
         };
         let msg = SwarmCsiReport::from_detection(&det);
         let back = msg.to_detection();
-        assert!((back.confidence - 0.85).abs() < 0.01, "confidence roundtrip");
+        assert!(
+            (back.confidence - 0.85).abs() < 0.01,
+            "confidence roundtrip"
+        );
         let vp = back.victim_position.unwrap();
         assert!((vp.x - 50.0).abs() < 0.001);
         assert!((vp.y - 75.0).abs() < 0.001);

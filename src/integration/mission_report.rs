@@ -5,12 +5,12 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct VictimReport {
     pub victim_id: u32,
-    pub position: [f64; 3],         // [north, east, down] NED metres
-    pub localization_error_m: f64,  // distance from ground-truth (sim only)
-    pub uncertainty_m: f64,         // fusion uncertainty ellipse
+    pub position: [f64; 3],        // [north, east, down] NED metres
+    pub localization_error_m: f64, // distance from ground-truth (sim only)
+    pub uncertainty_m: f64,        // fusion uncertainty ellipse
     pub contributing_drones: Vec<u32>,
     pub fused_confidence: f32,
-    pub detection_time_secs: f64,   // mission-elapsed time at confirmation
+    pub detection_time_secs: f64, // mission-elapsed time at confirmation
 }
 
 /// Complete mission outcome report.
@@ -23,7 +23,7 @@ pub struct MissionReport {
     pub coverage_pct: f64,
     pub victims_total: usize,
     pub victims_confirmed: usize,
-    pub detection_rate: f64,        // confirmed / total
+    pub detection_rate: f64, // confirmed / total
     pub mean_localization_error_m: f64,
     pub collision_events: u32,
     pub victims: Vec<VictimReport>,
@@ -33,7 +33,7 @@ pub struct MissionReport {
 /// Comparison against the Wi2SAR published baseline.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SotaComparison {
-    pub wi2sar_localization_m: f64,    // 5.0 baseline
+    pub wi2sar_localization_m: f64, // 5.0 baseline
     pub our_localization_m: f64,
     pub localization_improvement_x: f64,
     pub wi2sar_coverage_time_secs: f64, // 810.0 for single drone over 160k m²

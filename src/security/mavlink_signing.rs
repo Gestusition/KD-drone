@@ -33,8 +33,7 @@ impl MavlinkSigner {
         let ts = self.next_timestamp();
         let ts_bytes = ts.to_le_bytes(); // 8 bytes, MAVLink uses 6 but we include all for simplicity
 
-        let mut mac = HmacSha256::new_from_slice(&self.key)
-            .expect("HMAC accepts any key length");
+        let mut mac = HmacSha256::new_from_slice(&self.key).expect("HMAC accepts any key length");
         mac.update(&[self.link_id]);
         mac.update(&ts_bytes[..6]);
         mac.update(message_bytes);
@@ -55,8 +54,8 @@ impl MavlinkSigner {
         let start = current_ts.saturating_sub(32);
         for ts in start..=current_ts + 1 {
             let ts_bytes = ts.to_le_bytes();
-            let mut mac = HmacSha256::new_from_slice(&self.key)
-                .expect("HMAC accepts any key length");
+            let mut mac =
+                HmacSha256::new_from_slice(&self.key).expect("HMAC accepts any key length");
             mac.update(&[self.link_id]);
             mac.update(&ts_bytes[..6]);
             mac.update(message_bytes);

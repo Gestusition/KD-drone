@@ -101,8 +101,7 @@ impl RaftNode {
 
     /// Check whether a drone is eligible to become cluster head.
     pub fn is_eligible_leader(state: &DroneState, config: &RaftConfig) -> bool {
-        state.battery_pct >= config.min_battery_pct
-            && state.link_quality >= config.min_link_quality
+        state.battery_pct >= config.min_battery_pct && state.link_quality >= config.min_link_quality
     }
 
     /// Drive the Raft state machine by one time step.
@@ -158,7 +157,9 @@ impl RaftNode {
     /// Process an incoming Raft message and optionally produce a reply.
     pub fn handle_message(&mut self, msg: RaftMessage) -> Option<RaftMessage> {
         match msg {
-            RaftMessage::RequestVote { term, candidate_id, .. } => {
+            RaftMessage::RequestVote {
+                term, candidate_id, ..
+            } => {
                 if term > self.current_term {
                     self.current_term = term;
                     self.role = RaftRole::Follower;
@@ -184,7 +185,13 @@ impl RaftNode {
                 }
                 None
             }
-            RaftMessage::AppendEntries { term, leader_id: _, entries, leader_commit, .. } => {
+            RaftMessage::AppendEntries {
+                term,
+                leader_id: _,
+                entries,
+                leader_commit,
+                ..
+            } => {
                 if term >= self.current_term {
                     self.current_term = term;
                     self.role = RaftRole::Follower;
@@ -245,7 +252,10 @@ mod tests {
 
     #[test]
     fn test_election_starts_after_timeout() {
-        let config = RaftConfig { election_timeout_ms: 100, ..Default::default() };
+        let config = RaftConfig {
+            election_timeout_ms: 100,
+            ..Default::default()
+        };
         let mut node = RaftNode::new(NodeId(1), config);
         let result = node.tick(Duration::from_millis(200), &[]);
         assert!(result.is_some());

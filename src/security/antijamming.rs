@@ -96,7 +96,9 @@ impl FhssRadio {
         if self.rssi_history.len() < self.config.jamming_detect_window {
             return false;
         }
-        self.rssi_history.iter().all(|&r| r < self.config.rssi_threshold_dbm)
+        self.rssi_history
+            .iter()
+            .all(|&r| r < self.config.rssi_threshold_dbm)
     }
 
     /// Evasive hop: jump ahead by a pseudo-random offset to escape jammer.
@@ -146,13 +148,20 @@ mod tests {
         let r0 = FhssRadio::new(0, cfg.clone());
         let r1 = FhssRadio::new(7, cfg);
         // Nodes with different seeds should use different channels at hop 0
-        assert_ne!(r0.current_channel_mhz(), r1.current_channel_mhz(),
-            "different nodes should use different initial channels");
+        assert_ne!(
+            r0.current_channel_mhz(),
+            r1.current_channel_mhz(),
+            "different nodes should use different initial channels"
+        );
     }
 
     #[test]
     fn test_jamming_detection() {
-        let cfg = FhssConfig { jamming_detect_window: 3, rssi_threshold_dbm: -85.0, ..Default::default() };
+        let cfg = FhssConfig {
+            jamming_detect_window: 3,
+            rssi_threshold_dbm: -85.0,
+            ..Default::default()
+        };
         let mut radio = FhssRadio::new(0, cfg);
         // Feed 3 below-threshold RSSI values
         radio.observe_rssi(-90.0);
@@ -174,7 +183,10 @@ mod tests {
 
     #[test]
     fn test_tick_advances_hop() {
-        let cfg = FhssConfig { hop_rate_hz: 1000.0, ..Default::default() }; // 1 hop/ms
+        let cfg = FhssConfig {
+            hop_rate_hz: 1000.0,
+            ..Default::default()
+        }; // 1 hop/ms
         let mut radio = FhssRadio::new(0, cfg);
         let initial_idx = radio.hop_index;
         radio.tick(2.0); // 2 ms = 2 hops
@@ -187,7 +199,11 @@ mod tests {
     /// modulo / index by `channels_mhz.len()`.
     #[test]
     fn test_empty_channels_does_not_panic() {
-        let cfg = FhssConfig { channels_mhz: vec![], jamming_detect_window: 1, ..Default::default() };
+        let cfg = FhssConfig {
+            channels_mhz: vec![],
+            jamming_detect_window: 1,
+            ..Default::default()
+        };
         let mut radio = FhssRadio::new(7, cfg);
         // None of these may panic.
         let _ = radio.current_channel_mhz();
@@ -195,7 +211,11 @@ mod tests {
         radio.observe_rssi(-99.0); // window=1 → jamming_detected() true → evasive_hop()
         radio.tick(100.0);
         radio.evasive_hop();
-        assert_eq!(radio.current_channel_mhz(), 0.0, "empty channel list returns sentinel");
+        assert_eq!(
+            radio.current_channel_mhz(),
+            0.0,
+            "empty channel list returns sentinel"
+        );
     }
 
     #[test]

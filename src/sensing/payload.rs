@@ -1,4 +1,4 @@
-use crate::types::{NodeId, Position3D, CsiDetection};
+use crate::types::{CsiDetection, NodeId, Position3D};
 
 /// Configuration for the onboard CSI sensing payload.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -41,12 +41,21 @@ enum PipelineMode {
         rng_seed: u64,
     },
     /// Replay mode: reads from recorded CSI file.
-    Replay { file_path: String, loop_replay: bool },
+    Replay {
+        file_path: String,
+        loop_replay: bool,
+    },
 }
 
 impl CsiPayloadPipeline {
     pub fn new_live(node_id: NodeId, config: PayloadConfig, port: &str) -> Self {
-        Self { node_id, config, mode: PipelineMode::Live { port_path: port.to_string() } }
+        Self {
+            node_id,
+            config,
+            mode: PipelineMode::Live {
+                port_path: port.to_string(),
+            },
+        }
     }
 
     pub fn new_synthetic(
@@ -67,7 +76,12 @@ impl CsiPayloadPipeline {
         }
     }
 
-    pub fn new_replay(node_id: NodeId, config: PayloadConfig, path: &str, loop_replay: bool) -> Self {
+    pub fn new_replay(
+        node_id: NodeId,
+        config: PayloadConfig,
+        path: &str,
+        loop_replay: bool,
+    ) -> Self {
         Self {
             node_id,
             config,
@@ -81,9 +95,11 @@ impl CsiPayloadPipeline {
     /// Scan the current position and return a detection report (if any).
     pub async fn scan(&self, drone_pos: &Position3D) -> Option<CsiDetection> {
         match &self.mode {
-            PipelineMode::Synthetic { victim_positions, noise_std, rng_seed } => {
-                self.synthetic_scan(drone_pos, victim_positions, *noise_std, *rng_seed)
-            }
+            PipelineMode::Synthetic {
+                victim_positions,
+                noise_std,
+                rng_seed,
+            } => self.synthetic_scan(drone_pos, victim_positions, *noise_std, *rng_seed),
             PipelineMode::Live { .. } => {
                 // Production: would read from serial port, run CIR+RF encoder pipeline
                 // For now: return None (requires hardware)

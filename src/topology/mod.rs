@@ -4,10 +4,10 @@
 //! consistent shared state across a civilian fleet. General-purpose distributed
 //! consensus, not military swarming. See `NOTICE`.
 
-pub mod raft;
 pub mod gossip;
 pub mod mesh;
+pub mod raft;
 
-pub use raft::{RaftConfig, RaftNode, RaftRole};
 pub use gossip::GossipState;
 pub use mesh::MeshTopology;
+pub use raft::{RaftConfig, RaftNode, RaftRole};

@@ -220,8 +220,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Synthetic victims placed within the mission area for reward signal.
     let victims = vec![
-        Position3D { x: area_w * 0.2, y: area_h * 0.3, z: 0.0 },
-        Position3D { x: area_w * 0.6, y: area_h * 0.45, z: 0.0 },
+        Position3D {
+            x: area_w * 0.2,
+            y: area_h * 0.3,
+            z: 0.0,
+        },
+        Position3D {
+            x: area_w * 0.6,
+            y: area_h * 0.45,
+            z: 0.0,
+        },
     ];
 
     // Composite profile label so the viewer header surfaces the active patterns.
@@ -237,7 +245,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Some(path) => {
             let mut rec = TelemetryRecorder::create(path)?;
             rec.meta(&profile_label, args.drones, area_w, area_h, &victims)?;
-            println!("telemetry → {path} (spatial steps from episode {})", args.telemetry_episode);
+            println!(
+                "telemetry → {path} (spatial steps from episode {})",
+                args.telemetry_episode
+            );
             Some(rec)
         }
         None => None,
@@ -331,7 +342,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 } else {
                     prev_pos
                 };
-                let heading = if dist > 1e-9 { dy.atan2(dx) } else { states[idx].heading_rad };
+                let heading = if dist > 1e-9 {
+                    dy.atan2(dx)
+                } else {
+                    states[idx].heading_rad
+                };
                 let moved = prev_pos.distance_to(&new_pos);
 
                 // Commit the move to the drone state.

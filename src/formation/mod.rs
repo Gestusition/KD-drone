@@ -5,10 +5,10 @@
 //! collision avoidance, NOT adaptive behavior in response to threats or mission
 //! objectives, and is not military "swarming". See `NOTICE`.
 
-pub mod virtual_structure;
 pub mod leader_follower;
 pub mod reynolds;
+pub mod virtual_structure;
 
-pub use virtual_structure::VirtualStructure;
 pub use leader_follower::LeaderFollower;
 pub use reynolds::ReynoldsParams;
+pub use virtual_structure::VirtualStructure;

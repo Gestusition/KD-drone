@@ -4,11 +4,8 @@
 //! [`SyntheticCsiGenerator`] so integration tests can drive a complete
 //! swarm sim-loop with one call.
 
-use crate::{
-    config::SwarmConfig,
-    types::Position3D,
-};
 use super::synthetic_csi::SyntheticCsiGenerator;
+use crate::{config::SwarmConfig, types::Position3D};
 
 /// A self-contained demo scenario.
 pub struct DemoScenario {
@@ -36,9 +33,21 @@ impl DemoScenario {
             config: SwarmConfig::demo_default(),
             num_drones,
             victims: vec![
-                Position3D { x: 50.0,  y: 80.0,  z: 0.0 },
-                Position3D { x: 150.0, y: 200.0, z: 0.0 },
-                Position3D { x: 300.0, y: 100.0, z: 0.0 },
+                Position3D {
+                    x: 50.0,
+                    y: 80.0,
+                    z: 0.0,
+                },
+                Position3D {
+                    x: 150.0,
+                    y: 200.0,
+                    z: 0.0,
+                },
+                Position3D {
+                    x: 300.0,
+                    y: 100.0,
+                    z: 0.0,
+                },
             ],
         }
     }
@@ -49,9 +58,11 @@ impl DemoScenario {
             name: "Open Field Search".into(),
             config: SwarmConfig::demo_default(),
             num_drones,
-            victims: vec![
-                Position3D { x: 200.0, y: 150.0, z: 0.0 },
-            ],
+            victims: vec![Position3D {
+                x: 200.0,
+                y: 150.0,
+                z: 0.0,
+            }],
         }
     }
 
@@ -71,17 +82,28 @@ impl DemoScenario {
             config: cfg,
             num_drones,
             victims: vec![
-                Position3D { x: 30.0, y: 10.0, z: -2.0 },
-                Position3D { x: 80.0, y: 15.0, z: -2.0 },
+                Position3D {
+                    x: 30.0,
+                    y: 10.0,
+                    z: -2.0,
+                },
+                Position3D {
+                    x: 80.0,
+                    y: 15.0,
+                    z: -2.0,
+                },
             ],
         }
     }
 
     /// Build a [`SyntheticCsiGenerator`] from this scenario's config and victims.
     pub fn make_csi_generator(&self) -> SyntheticCsiGenerator {
-        let (noise_std, detection_range_m) = self.config.demo.as_ref().map(|d| {
-            (d.csi_noise_std, self.config.planning.csi_scan_width_m / 2.0)
-        }).unwrap_or((0.05, 14.0));
+        let (noise_std, detection_range_m) = self
+            .config
+            .demo
+            .as_ref()
+            .map(|d| (d.csi_noise_std, self.config.planning.csi_scan_width_m / 2.0))
+            .unwrap_or((0.05, 14.0));
 
         SyntheticCsiGenerator::new(self.victims.clone(), noise_std, detection_range_m)
     }
@@ -121,7 +143,10 @@ mod tests {
             "4-drone SAR coverage estimate {t:.1} s exceeds 600 s (10 min) battery limit"
         );
         // Also verify the estimate is positive and finite.
-        assert!(t > 0.0 && t.is_finite(), "coverage estimate {t} must be positive and finite");
+        assert!(
+            t > 0.0 && t.is_finite(),
+            "coverage estimate {t} must be positive and finite"
+        );
     }
 
     #[test]

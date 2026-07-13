@@ -26,7 +26,10 @@ pub struct ReplayBuffer {
 
 impl ReplayBuffer {
     pub fn new(capacity: usize) -> Self {
-        Self { transitions: Vec::with_capacity(capacity), capacity }
+        Self {
+            transitions: Vec::with_capacity(capacity),
+            capacity,
+        }
     }
 
     pub fn push(&mut self, t: Transition) {
@@ -40,8 +43,12 @@ impl ReplayBuffer {
         self.transitions.len() >= self.capacity
     }
 
-    pub fn len(&self) -> usize { self.transitions.len() }
-    pub fn is_empty(&self) -> bool { self.transitions.is_empty() }
+    pub fn len(&self) -> usize {
+        self.transitions.len()
+    }
+    pub fn is_empty(&self) -> bool {
+        self.transitions.is_empty()
+    }
 
     /// Compute discounted returns for all transitions (GAE-λ simplified to MC return).
     pub fn compute_returns(&self, gamma: f32) -> Vec<f32> {
@@ -93,7 +100,9 @@ pub struct UpdateStats {
 /// Compute mean return from a buffer.
 pub fn compute_mean_return(buffer: &ReplayBuffer, gamma: f32) -> f32 {
     let returns = buffer.compute_returns(gamma);
-    if returns.is_empty() { return 0.0; }
+    if returns.is_empty() {
+        return 0.0;
+    }
     returns.iter().sum::<f32>() / returns.len() as f32
 }
 
@@ -118,12 +127,15 @@ pub fn ppo_update(
 
     // Normalise returns
     let std_return = {
-        let var = returns.iter()
+        let var = returns
+            .iter()
             .map(|r| (r - mean_return).powi(2))
-            .sum::<f32>() / returns.len() as f32;
+            .sum::<f32>()
+            / returns.len() as f32;
         var.sqrt().max(1e-8)
     };
-    let advantages: Vec<f32> = returns.iter()
+    let advantages: Vec<f32> = returns
+        .iter()
         .map(|r| (r - mean_return) / std_return)
         .collect();
 
@@ -189,16 +201,23 @@ mod tests {
     #[test]
     fn test_returns_monotone_positive() {
         let mut buf = ReplayBuffer::new(4);
-        for _ in 0..4 { buf.push(make_transition(1.0)); }
+        for _ in 0..4 {
+            buf.push(make_transition(1.0));
+        }
         let returns = buf.compute_returns(0.99);
         // Each return should be >= 1.0 (positive reward accumulates)
         for r in &returns {
-            assert!(*r >= 1.0, "all returns should be >= 1.0 with positive rewards");
+            assert!(
+                *r >= 1.0,
+                "all returns should be >= 1.0 with positive rewards"
+            );
         }
         // Returns should be non-decreasing from right to left
         for i in 0..returns.len() - 1 {
-            assert!(returns[i] >= returns[i + 1],
-                "earlier returns should be higher (more future reward)");
+            assert!(
+                returns[i] >= returns[i + 1],
+                "earlier returns should be higher (more future reward)"
+            );
         }
     }
 
@@ -228,7 +247,10 @@ mod tests {
         use rand::Rng;
 
         let mut actor = MappoActor::random_init(ActorConfig::default());
-        let ppo_cfg = PpoConfig { lr: 1e-3, ..PpoConfig::default() };
+        let ppo_cfg = PpoConfig {
+            lr: 1e-3,
+            ..PpoConfig::default()
+        };
         let mut rng = rand::thread_rng();
 
         // Collect transitions with varying rewards (simulate improvement trajectory)

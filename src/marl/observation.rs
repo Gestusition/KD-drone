@@ -1,4 +1,4 @@
-use crate::types::{DroneState, NodeId, Position3D, GridCell, CsiDetection};
+use crate::types::{CsiDetection, DroneState, GridCell, NodeId, Position3D};
 
 /// Local observation vector for a single drone agent.
 /// Feeds into the MAPPO actor network.
@@ -57,10 +57,10 @@ impl LocalObservation {
         task_target: Option<&Position3D>,
     ) -> Self {
         let own_state = [
-            state.position.x as f32 / 1000.0,  // normalised to km
+            state.position.x as f32 / 1000.0, // normalised to km
             state.position.y as f32 / 1000.0,
             state.position.z as f32 / 100.0,
-            state.velocity.vx as f32 / 20.0,   // normalised to max speed
+            state.velocity.vx as f32 / 20.0, // normalised to max speed
             state.velocity.vy as f32 / 20.0,
             state.velocity.vz as f32 / 5.0,
             state.heading_rad as f32 / std::f32::consts::PI,
@@ -71,7 +71,7 @@ impl LocalObservation {
         let mut neighbor_relative_pos = [0.0f32; 18];
         for (i, (_, pos)) in neighbors.iter().take(6).enumerate() {
             let base = i * 3;
-            neighbor_relative_pos[base]     = (pos.x - state.position.x) as f32 / 100.0;
+            neighbor_relative_pos[base] = (pos.x - state.position.x) as f32 / 100.0;
             neighbor_relative_pos[base + 1] = (pos.y - state.position.y) as f32 / 100.0;
             neighbor_relative_pos[base + 2] = (pos.z - state.position.z) as f32 / 10.0;
         }
@@ -85,7 +85,13 @@ impl LocalObservation {
 
         let csi_reading = if let Some(det) = csi_detection {
             let vp = det.victim_position.unwrap_or(state.position);
-            [det.confidence, (vp.x / 100.0) as f32, (vp.y / 100.0) as f32, (vp.z / 10.0) as f32, 1.0]
+            [
+                det.confidence,
+                (vp.x / 100.0) as f32,
+                (vp.y / 100.0) as f32,
+                (vp.z / 10.0) as f32,
+                1.0,
+            ]
         } else {
             [0.0, 0.0, 0.0, 0.0, 0.0]
         };
@@ -95,8 +101,10 @@ impl LocalObservation {
                 (target.x / 100.0) as f32,
                 (target.y / 100.0) as f32,
                 (target.z / 10.0) as f32,
-                1.0,  // deadline_norm: placeholder
-                1.0, 0.0, 0.0, // task_type one-hot: CoverCell
+                1.0, // deadline_norm: placeholder
+                1.0,
+                0.0,
+                0.0, // task_type one-hot: CoverCell
             ]
         } else {
             [0.0f32; 7]
@@ -135,21 +143,35 @@ impl LocalObservation {
         let mut neighbor_relative_pos = [0.0f32; 18];
         for (i, (_, pos)) in neighbors.iter().take(6).enumerate() {
             let base = i * 3;
-            neighbor_relative_pos[base]   = ((pos.x - state.position.x) / 100.0) as f32;
-            neighbor_relative_pos[base+1] = ((pos.y - state.position.y) / 100.0) as f32;
-            neighbor_relative_pos[base+2] = ((pos.z - state.position.z) / 10.0) as f32;
+            neighbor_relative_pos[base] = ((pos.x - state.position.x) / 100.0) as f32;
+            neighbor_relative_pos[base + 1] = ((pos.y - state.position.y) / 100.0) as f32;
+            neighbor_relative_pos[base + 2] = ((pos.z - state.position.z) / 10.0) as f32;
         }
 
         let csi_reading = match csi_detection {
             Some(det) => {
                 let vp = det.victim_position.unwrap_or(state.position);
-                [det.confidence, (vp.x / 100.0) as f32, (vp.y / 100.0) as f32, (vp.z / 10.0) as f32, 1.0]
+                [
+                    det.confidence,
+                    (vp.x / 100.0) as f32,
+                    (vp.y / 100.0) as f32,
+                    (vp.z / 10.0) as f32,
+                    1.0,
+                ]
             }
             None => [0.0; 5],
         };
 
         let task_encoding: [f32; 7] = match task_target {
-            Some(t) => [(t.x / 100.0) as f32, (t.y / 100.0) as f32, (t.z / 10.0) as f32, 1.0, 1.0, 0.0, 0.0],
+            Some(t) => [
+                (t.x / 100.0) as f32,
+                (t.y / 100.0) as f32,
+                (t.z / 10.0) as f32,
+                1.0,
+                1.0,
+                0.0,
+                0.0,
+            ],
             None => [0.0; 7],
         };
 
@@ -213,6 +235,9 @@ mod tests {
             timestamp_ms: 0,
         };
         let obs = LocalObservation::from_state_no_grid(&state, &[], None, None);
-        assert!((obs.own_state[7] - 0.75).abs() < 1e-4, "battery should be normalised to 0.75");
+        assert!(
+            (obs.own_state[7] - 0.75).abs() < 1e-4,
+            "battery should be normalised to 0.75"
+        );
     }
 }

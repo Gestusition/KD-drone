@@ -49,16 +49,15 @@ impl AuctionAllocator {
         let task_ids: Vec<TaskId> = self.pending_tasks.keys().copied().collect();
 
         for task_id in task_ids {
-            let winner = self
-                .bids
-                .get(&task_id)
-                .and_then(|bids| {
-                    bids.iter()
-                        .min_by(|a, b| {
-                            a.score.partial_cmp(&b.score).unwrap_or(std::cmp::Ordering::Equal)
-                        })
-                        .map(|b| b.node_id)
-                });
+            let winner = self.bids.get(&task_id).and_then(|bids| {
+                bids.iter()
+                    .min_by(|a, b| {
+                        a.score
+                            .partial_cmp(&b.score)
+                            .unwrap_or(std::cmp::Ordering::Equal)
+                    })
+                    .map(|b| b.node_id)
+            });
 
             if let Some(winner_id) = winner {
                 if let Some(task) = self.pending_tasks.get_mut(&task_id) {
@@ -109,8 +108,16 @@ mod tests {
         let mut alloc = AuctionAllocator::new(1000);
         let task = make_task(1);
         alloc.announce_task(task);
-        alloc.submit_bid(Bid { node_id: NodeId(1), task_id: TaskId(1), score: 0.8 });
-        alloc.submit_bid(Bid { node_id: NodeId(2), task_id: TaskId(1), score: 0.3 });
+        alloc.submit_bid(Bid {
+            node_id: NodeId(1),
+            task_id: TaskId(1),
+            score: 0.8,
+        });
+        alloc.submit_bid(Bid {
+            node_id: NodeId(2),
+            task_id: TaskId(1),
+            score: 0.3,
+        });
         let results = alloc.resolve();
         assert_eq!(results.len(), 1);
         assert_eq!(results[0].1, NodeId(2)); // lower score wins

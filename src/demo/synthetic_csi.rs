@@ -3,8 +3,8 @@
 //! Uses exponential distance decay and configurable Gaussian noise to produce
 //! realistic CsiDetection events for scenario testing and demo mode.
 
-use rand::Rng;
 use crate::types::{CsiDetection, NodeId, Position3D};
+use rand::Rng;
 
 /// Generates synthetic CSI detection events for a set of victim positions.
 pub struct SyntheticCsiGenerator {
@@ -18,7 +18,11 @@ pub struct SyntheticCsiGenerator {
 
 impl SyntheticCsiGenerator {
     pub fn new(victims: Vec<Position3D>, noise_std: f64, detection_range_m: f64) -> Self {
-        Self { victims, noise_std, detection_range_m }
+        Self {
+            victims,
+            noise_std,
+            detection_range_m,
+        }
     }
 
     /// Attempt to detect a victim from the given drone position.
@@ -85,27 +89,45 @@ mod tests {
         // A victim right on the drone should nearly always return a detection.
         // Run 20 trials; at least 15 should detect (0.4 threshold at distance 0).
         let gen = SyntheticCsiGenerator::new(
-            vec![Position3D { x: 0.0, y: 0.0, z: 0.0 }],
+            vec![Position3D {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+            }],
             0.01,
             28.0,
         );
         let mut hits = 0u32;
         for i in 0..20 {
-            if gen.detect(NodeId(0), &Position3D::zero(), i as u64).is_some() {
+            if gen
+                .detect(NodeId(0), &Position3D::zero(), i as u64)
+                .is_some()
+            {
                 hits += 1;
             }
         }
-        assert!(hits >= 15, "expected ≥15/20 detections at zero range, got {hits}");
+        assert!(
+            hits >= 15,
+            "expected ≥15/20 detections at zero range, got {hits}"
+        );
     }
 
     #[test]
     fn test_detect_beyond_range_returns_none() {
         let gen = SyntheticCsiGenerator::new(
-            vec![Position3D { x: 0.0, y: 0.0, z: 0.0 }],
+            vec![Position3D {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+            }],
             0.01,
             28.0,
         );
-        let far_pos = Position3D { x: 1000.0, y: 1000.0, z: 0.0 };
+        let far_pos = Position3D {
+            x: 1000.0,
+            y: 1000.0,
+            z: 0.0,
+        };
         // All 10 attempts should return None since drone is 1414 m away.
         for i in 0..10 {
             assert!(
@@ -120,8 +142,16 @@ mod tests {
         // Two victims: one very close (high conf), one just at boundary (low conf).
         let gen = SyntheticCsiGenerator::new(
             vec![
-                Position3D { x: 1.0,  y: 0.0, z: 0.0 }, // close
-                Position3D { x: 27.0, y: 0.0, z: 0.0 }, // near boundary
+                Position3D {
+                    x: 1.0,
+                    y: 0.0,
+                    z: 0.0,
+                }, // close
+                Position3D {
+                    x: 27.0,
+                    y: 0.0,
+                    z: 0.0,
+                }, // near boundary
             ],
             0.01,
             28.0,

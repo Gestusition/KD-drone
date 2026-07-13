@@ -134,11 +134,15 @@ mod tests {
             new_cells_covered: 3,
             victim_confirmed: false,
             contributed_to_triangulation: false,
-            nearest_neighbor_dist: 1.0,  // collision (< 1.5 m threshold)
+            nearest_neighbor_dist: 1.0, // collision (< 1.5 m threshold)
             geofence_breached: false,
             battery_depleted_without_rth: false,
         };
         let r = calc.compute(&ctx);
-        assert!(r < 0.0, "collision (-100) should dominate coverage (+30), reward={}", r);
+        assert!(
+            r < 0.0,
+            "collision (-100) should dominate coverage (+30), reward={}",
+            r
+        );
     }
 }

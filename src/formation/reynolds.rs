@@ -32,7 +32,10 @@ impl ReynoldsParams {
         node_id: NodeId,
         positions: &[(NodeId, Position3D)],
     ) -> Velocity3D {
-        let own_pos = positions.iter().find(|(id, _)| *id == node_id).map(|(_, p)| *p);
+        let own_pos = positions
+            .iter()
+            .find(|(id, _)| *id == node_id)
+            .map(|(_, p)| *p);
         let own_pos = match own_pos {
             Some(p) => p,
             None => return Velocity3D::default(),
@@ -67,7 +70,9 @@ impl ReynoldsParams {
         // --- Cohesion: steer toward average position ---
         let (avg_x, avg_y, avg_z) = neighbours
             .iter()
-            .fold((0.0, 0.0, 0.0), |(ax, ay, az), (_, p)| (ax + p.x, ay + p.y, az + p.z));
+            .fold((0.0, 0.0, 0.0), |(ax, ay, az), (_, p)| {
+                (ax + p.x, ay + p.y, az + p.z)
+            });
         let coh_x = (avg_x / n) - own_pos.x;
         let coh_y = (avg_y / n) - own_pos.y;
         let coh_z = (avg_z / n) - own_pos.z;
@@ -87,10 +92,27 @@ mod tests {
 
     #[test]
     fn test_separation_pushes_apart() {
-        let params = ReynoldsParams { separation_dist_m: 5.0, ..Default::default() };
+        let params = ReynoldsParams {
+            separation_dist_m: 5.0,
+            ..Default::default()
+        };
         let positions = vec![
-            (NodeId(0), Position3D { x: 0.0, y: 0.0, z: 0.0 }),
-            (NodeId(1), Position3D { x: 1.0, y: 0.0, z: 0.0 }), // too close
+            (
+                NodeId(0),
+                Position3D {
+                    x: 0.0,
+                    y: 0.0,
+                    z: 0.0,
+                },
+            ),
+            (
+                NodeId(1),
+                Position3D {
+                    x: 1.0,
+                    y: 0.0,
+                    z: 0.0,
+                },
+            ), // too close
         ];
         let vel = params.compute_velocity(NodeId(0), &positions);
         // Separation force should push node 0 in the -x direction (away from node 1)

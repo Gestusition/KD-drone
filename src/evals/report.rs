@@ -91,7 +91,11 @@ mod tests {
     use crate::evals::stats::ConfidenceInterval;
 
     fn agg(cov: f64, det: f64) -> AggregateMetrics {
-        let ci = |p: f64| ConfidenceInterval { point: p, lo: p - 0.05, hi: p + 0.05 };
+        let ci = |p: f64| ConfidenceInterval {
+            point: p,
+            lo: p - 0.05,
+            hi: p + 0.05,
+        };
         AggregateMetrics {
             coverage_iqm: ci(cov),
             localization_iqm: ci(1.5),

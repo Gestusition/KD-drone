@@ -45,10 +45,21 @@ impl EvalConfig {
             seeds: 10,
             episodes_per_seed: 10,
             victims: vec![
-                Position3D { x: 120.0, y: 90.0, z: 0.0 },
-                Position3D { x: 320.0, y: 280.0, z: 0.0 },
+                Position3D {
+                    x: 120.0,
+                    y: 90.0,
+                    z: 0.0,
+                },
+                Position3D {
+                    x: 320.0,
+                    y: 280.0,
+                    z: 0.0,
+                },
             ],
-            noise: NoiseLevel { sigma: 0.05, kappa: 8.0 },
+            noise: NoiseLevel {
+                sigma: 0.05,
+                kappa: 8.0,
+            },
         }
     }
 }
@@ -203,8 +214,16 @@ pub fn run_episode(cfg: &EvalConfig, seed: u64) -> EpisodeMetrics {
     let total_cells = (gx * gy) as f64;
     let scanned = cover_count.iter().filter(|&&c| c > 0).count() as f64;
     let overlapped = cover_count.iter().filter(|&&c| c > 1).count() as f64;
-    let coverage_pct = if total_cells > 0.0 { scanned / total_cells } else { 0.0 };
-    let overlap_ratio = if scanned > 0.0 { overlapped / scanned } else { 0.0 };
+    let coverage_pct = if total_cells > 0.0 {
+        scanned / total_cells
+    } else {
+        0.0
+    };
+    let overlap_ratio = if scanned > 0.0 {
+        overlapped / scanned
+    } else {
+        0.0
+    };
 
     // Episodic return: reward coverage + detection, penalize overlap + collisions.
     let detect_bonus = if detected { 1.0 } else { 0.0 };
@@ -274,7 +293,11 @@ fn fuse_estimate(
         wsum += w;
     }
     let w = wsum.max(1e-9);
-    let est = Position3D { x: sx / w, y: sy / w, z: 0.0 };
+    let est = Position3D {
+        x: sx / w,
+        y: sy / w,
+        z: 0.0,
+    };
     let g = gdop(contributors, victim);
     (est, g)
 }

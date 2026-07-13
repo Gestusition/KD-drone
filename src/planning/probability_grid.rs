@@ -25,7 +25,12 @@ impl ProbabilityGrid {
                     .collect()
             })
             .collect();
-        Self { cells, cell_size_m, width, height }
+        Self {
+            cells,
+            cell_size_m,
+            width,
+            height,
+        }
     }
 
     /// Bayesian update: P(victim | detection) or P(victim | no detection).
@@ -58,7 +63,11 @@ impl ProbabilityGrid {
         let mut best: Option<((u32, u32), f32)> = None;
         for row in &self.cells {
             for cell in row {
-                let scanned_weight = if cell.last_scanned_ms > 0 { cell.pheromone } else { 0.0 };
+                let scanned_weight = if cell.last_scanned_ms > 0 {
+                    cell.pheromone
+                } else {
+                    0.0
+                };
                 let score = cell.victim_probability * (1.0 - scanned_weight);
                 if best.as_ref().is_none_or(|(_, bs)| score > *bs) {
                     best = Some(((cell.x_idx, cell.y_idx), score));
@@ -86,8 +95,17 @@ impl ProbabilityGrid {
     /// Fraction of cells that have been scanned at least once.
     pub fn coverage_pct(&self) -> f64 {
         let total: usize = self.cells.iter().flatten().count();
-        let scanned: usize = self.cells.iter().flatten().filter(|c| c.last_scanned_ms > 0).count();
-        if total == 0 { 1.0 } else { scanned as f64 / total as f64 }
+        let scanned: usize = self
+            .cells
+            .iter()
+            .flatten()
+            .filter(|c| c.last_scanned_ms > 0)
+            .count();
+        if total == 0 {
+            1.0
+        } else {
+            scanned as f64 / total as f64
+        }
     }
 
     /// Return the next cell for systematic boustrophedon sweep (row-by-row, unscanned first).

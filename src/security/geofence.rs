@@ -54,7 +54,9 @@ impl Geofence {
         if dist <= self.hard_margin_m {
             GeofenceResult::HardBreach
         } else if dist <= self.soft_margin_m {
-            GeofenceResult::SoftWarning { distance_to_boundary_m: dist }
+            GeofenceResult::SoftWarning {
+                distance_to_boundary_m: dist,
+            }
         } else {
             GeofenceResult::Safe
         }
@@ -131,14 +133,22 @@ mod tests {
     #[test]
     fn test_centre_is_safe() {
         let f = square_fence();
-        let pos = Position3D { x: 50.0, y: 50.0, z: -30.0 };
+        let pos = Position3D {
+            x: 50.0,
+            y: 50.0,
+            z: -30.0,
+        };
         assert_eq!(f.check(&pos), GeofenceResult::Safe);
     }
 
     #[test]
     fn test_outside_is_hard_breach() {
         let f = square_fence();
-        let pos = Position3D { x: 150.0, y: 50.0, z: -30.0 };
+        let pos = Position3D {
+            x: 150.0,
+            y: 50.0,
+            z: -30.0,
+        };
         assert_eq!(f.check(&pos), GeofenceResult::HardBreach);
     }
 
@@ -146,14 +156,22 @@ mod tests {
     fn test_near_edge_is_soft_warning() {
         let f = square_fence();
         // 15m from boundary → beyond hard (10m) but within soft (25m)
-        let pos = Position3D { x: 15.0, y: 50.0, z: -30.0 };
+        let pos = Position3D {
+            x: 15.0,
+            y: 50.0,
+            z: -30.0,
+        };
         assert!(matches!(f.check(&pos), GeofenceResult::SoftWarning { .. }));
     }
 
     #[test]
     fn test_altitude_breach() {
         let f = square_fence();
-        let pos = Position3D { x: 50.0, y: 50.0, z: -200.0 }; // 200m altitude
+        let pos = Position3D {
+            x: 50.0,
+            y: 50.0,
+            z: -200.0,
+        }; // 200m altitude
         assert_eq!(f.check(&pos), GeofenceResult::HardBreach);
     }
 
@@ -164,7 +182,11 @@ mod tests {
     #[test]
     fn test_nan_altitude_fails_closed() {
         let f = square_fence();
-        let pos = Position3D { x: 50.0, y: 50.0, z: f64::NAN };
+        let pos = Position3D {
+            x: 50.0,
+            y: 50.0,
+            z: f64::NAN,
+        };
         assert_eq!(f.check(&pos), GeofenceResult::HardBreach);
     }
 
@@ -173,11 +195,19 @@ mod tests {
     fn test_nonfinite_horizontal_fails_closed() {
         let f = square_fence();
         assert_eq!(
-            f.check(&Position3D { x: f64::NAN, y: 50.0, z: -30.0 }),
+            f.check(&Position3D {
+                x: f64::NAN,
+                y: 50.0,
+                z: -30.0
+            }),
             GeofenceResult::HardBreach
         );
         assert_eq!(
-            f.check(&Position3D { x: 50.0, y: f64::INFINITY, z: -30.0 }),
+            f.check(&Position3D {
+                x: 50.0,
+                y: f64::INFINITY,
+                z: -30.0
+            }),
             GeofenceResult::HardBreach
         );
     }

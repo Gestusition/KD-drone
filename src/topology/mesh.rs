@@ -70,11 +70,23 @@ mod tests {
     fn test_nearest_k() {
         let mut topo = MeshTopology::new();
         let mut s0 = DroneState::default_at_origin(NodeId(0));
-        s0.position = Position3D { x: 0.0, y: 0.0, z: 0.0 };
+        s0.position = Position3D {
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+        };
         let mut s1 = DroneState::default_at_origin(NodeId(1));
-        s1.position = Position3D { x: 10.0, y: 0.0, z: 0.0 };
+        s1.position = Position3D {
+            x: 10.0,
+            y: 0.0,
+            z: 0.0,
+        };
         let mut s2 = DroneState::default_at_origin(NodeId(2));
-        s2.position = Position3D { x: 5.0, y: 0.0, z: 0.0 };
+        s2.position = Position3D {
+            x: 5.0,
+            y: 0.0,
+            z: 0.0,
+        };
         topo.update_node(s0);
         topo.update_node(s1);
         topo.update_node(s2);

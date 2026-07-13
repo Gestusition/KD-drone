@@ -15,7 +15,12 @@ pub struct GossipState<T: Clone> {
 
 impl<T: Clone> GossipState<T> {
     pub fn new(value: T, origin: NodeId, timestamp_ms: u64) -> Self {
-        Self { value, version: 1, origin, timestamp_ms }
+        Self {
+            value,
+            version: 1,
+            origin,
+            timestamp_ms,
+        }
     }
 
     /// Last-write-wins merge: higher version wins; ties go to higher origin id.
@@ -62,16 +67,36 @@ mod tests {
 
     #[test]
     fn test_merge_higher_version_wins() {
-        let a: GossipState<u32> = GossipState { value: 1, version: 2, origin: NodeId(1), timestamp_ms: 0 };
-        let b: GossipState<u32> = GossipState { value: 2, version: 5, origin: NodeId(2), timestamp_ms: 0 };
+        let a: GossipState<u32> = GossipState {
+            value: 1,
+            version: 2,
+            origin: NodeId(1),
+            timestamp_ms: 0,
+        };
+        let b: GossipState<u32> = GossipState {
+            value: 2,
+            version: 5,
+            origin: NodeId(2),
+            timestamp_ms: 0,
+        };
         let merged = GossipState::merge(a, b);
         assert_eq!(merged.value, 2);
     }
 
     #[test]
     fn test_merge_tie_higher_origin_wins() {
-        let a: GossipState<u32> = GossipState { value: 10, version: 3, origin: NodeId(5), timestamp_ms: 0 };
-        let b: GossipState<u32> = GossipState { value: 20, version: 3, origin: NodeId(2), timestamp_ms: 0 };
+        let a: GossipState<u32> = GossipState {
+            value: 10,
+            version: 3,
+            origin: NodeId(5),
+            timestamp_ms: 0,
+        };
+        let b: GossipState<u32> = GossipState {
+            value: 20,
+            version: 3,
+            origin: NodeId(2),
+            timestamp_ms: 0,
+        };
         let merged = GossipState::merge(a, b);
         assert_eq!(merged.value, 10); // origin 5 > 2
     }

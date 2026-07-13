@@ -12,7 +12,10 @@ pub struct UwbAntiSpoofing {
 
 impl UwbAntiSpoofing {
     pub fn new(tolerance_m: f64, min_neighbors: usize) -> Self {
-        Self { tolerance_m, min_neighbors }
+        Self {
+            tolerance_m,
+            min_neighbors,
+        }
     }
 
     /// Returns `true` if the GPS position is consistent with UWB ranging data.
@@ -59,9 +62,21 @@ mod tests {
     #[test]
     fn test_consistent_gps_valid() {
         let anti = UwbAntiSpoofing::new(2.0, 2);
-        let gps = Position3D { x: 0.0, y: 0.0, z: 0.0 };
-        let n1_pos = Position3D { x: 10.0, y: 0.0, z: 0.0 };
-        let n2_pos = Position3D { x: 0.0, y: 10.0, z: 0.0 };
+        let gps = Position3D {
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+        };
+        let n1_pos = Position3D {
+            x: 10.0,
+            y: 0.0,
+            z: 0.0,
+        };
+        let n2_pos = Position3D {
+            x: 0.0,
+            y: 10.0,
+            z: 0.0,
+        };
         let uwb_ranges = vec![(NodeId(1), 10.0), (NodeId(2), 10.0)];
         let neighbor_gps = vec![(NodeId(1), n1_pos), (NodeId(2), n2_pos)];
         assert!(anti.is_gps_valid(&gps, &uwb_ranges, &neighbor_gps));
@@ -71,9 +86,21 @@ mod tests {
     fn test_spoofed_gps_invalid() {
         let anti = UwbAntiSpoofing::new(2.0, 2);
         // GPS claims (0,0) but UWB says drone is 50m from both neighbours
-        let gps = Position3D { x: 0.0, y: 0.0, z: 0.0 };
-        let n1_pos = Position3D { x: 10.0, y: 0.0, z: 0.0 };
-        let n2_pos = Position3D { x: 0.0, y: 10.0, z: 0.0 };
+        let gps = Position3D {
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+        };
+        let n1_pos = Position3D {
+            x: 10.0,
+            y: 0.0,
+            z: 0.0,
+        };
+        let n2_pos = Position3D {
+            x: 0.0,
+            y: 10.0,
+            z: 0.0,
+        };
         // UWB reports 50m but GPS only shows 10m — spoof detected
         let uwb_ranges = vec![(NodeId(1), 50.0), (NodeId(2), 50.0)];
         let neighbor_gps = vec![(NodeId(1), n1_pos), (NodeId(2), n2_pos)];

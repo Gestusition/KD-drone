@@ -202,6 +202,10 @@ mod tests {
             victims: vec![],
         };
         let t = scenario.estimate_coverage_time_secs();
-        assert!(t < 240.0, "4-drone Wi2SAR reference scenario: {}s should be < 240s (4 min SOTA)", t);
+        assert!(
+            t < 240.0,
+            "4-drone Wi2SAR reference scenario: {}s should be < 240s (4 min SOTA)",
+            t
+        );
     }
 }

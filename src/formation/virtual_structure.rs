@@ -63,7 +63,11 @@ mod tests {
     fn test_grid_formation_4_drones() {
         let vs = VirtualStructure::grid_formation(4, 5.0);
         assert_eq!(vs.offsets.len(), 4);
-        let ref_pos = Position3D { x: 100.0, y: 200.0, z: -30.0 };
+        let ref_pos = Position3D {
+            x: 100.0,
+            y: 200.0,
+            z: -30.0,
+        };
         let p = vs.target_position(NodeId(0), &ref_pos);
         assert!((p.x - 100.0).abs() < 1e-6);
     }

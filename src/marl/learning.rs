@@ -35,9 +35,7 @@ impl LearningPattern {
         match s.trim().to_ascii_lowercase().as_str() {
             "mappo" => LearningPattern::Mappo,
             "ippo" => LearningPattern::Ippo,
-            "curiosity" | "mappocuriosity" | "mappo_curiosity" => {
-                LearningPattern::MappoCuriosity
-            }
+            "curiosity" | "mappocuriosity" | "mappo_curiosity" => LearningPattern::MappoCuriosity,
             "meta" | "metarl" | "meta_rl" => LearningPattern::MetaRl,
             _ => LearningPattern::default(),
         }
@@ -57,9 +55,7 @@ impl LearningPattern {
     pub fn centralized_critic(&self) -> bool {
         matches!(
             self,
-            LearningPattern::Mappo
-                | LearningPattern::MappoCuriosity
-                | LearningPattern::MetaRl
+            LearningPattern::Mappo | LearningPattern::MappoCuriosity | LearningPattern::MetaRl
         )
     }
 

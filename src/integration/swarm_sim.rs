@@ -35,8 +35,16 @@ pub async fn run_sar_simulation(
 ) -> SimMissionResult {
     let cfg = SwarmConfig::wi2sar_reference();
     let victims = vec![
-        Position3D { x: 80.0,  y: 120.0, z: 0.0 },
-        Position3D { x: 250.0, y: 180.0, z: 0.0 },
+        Position3D {
+            x: 80.0,
+            y: 120.0,
+            z: 0.0,
+        },
+        Position3D {
+            x: 250.0,
+            y: 180.0,
+            z: 0.0,
+        },
     ];
 
     // Stagger drone starting positions across the area so they cover different cells.
@@ -124,7 +132,10 @@ pub async fn run_sar_simulation(
         // Check pairwise collision events (separation < 1.5 m).
         for i in 0..drones.len() {
             for j in (i + 1)..drones.len() {
-                let dist = drones[i].state.position.distance_to(&drones[j].state.position);
+                let dist = drones[i]
+                    .state
+                    .position
+                    .distance_to(&drones[j].state.position);
                 if dist < 1.5 {
                     collision_events += 1;
                 }
@@ -261,8 +272,10 @@ pub async fn run_mission_with_report(
                         drones[idx].state.position.y += (dy / dist) * step;
                     }
                     // Re-scan the vectored peer; if it now has a contact, add it.
-                    if let Some(det) =
-                        drones[idx].csi_pipeline.scan(&drones[idx].state.position).await
+                    if let Some(det) = drones[idx]
+                        .csi_pipeline
+                        .scan(&drones[idx].state.position)
+                        .await
                     {
                         step_detections.push(det);
                     }
@@ -272,8 +285,10 @@ pub async fn run_mission_with_report(
 
         // Multi-drone fusion
         if step_detections.len() >= 2 {
-            let positions: Vec<(NodeId, Position3D)> =
-                drones.iter().map(|d| (d.node_id, d.state.position)).collect();
+            let positions: Vec<(NodeId, Position3D)> = drones
+                .iter()
+                .map(|d| (d.node_id, d.state.position))
+                .collect();
             if let Some(fused) = fusion.fuse(&step_detections, &positions) {
                 if fused.confidence > 0.7 {
                     // Check this isn't a duplicate of an already-confirmed victim
@@ -341,14 +356,22 @@ pub async fn run_mission_with_report(
         // Collision metric: count residual pairwise breaches after separation.
         for i in 0..drones.len() {
             for j in (i + 1)..drones.len() {
-                if drones[i].state.position.distance_to(&drones[j].state.position) < 1.5 {
+                if drones[i]
+                    .state
+                    .position
+                    .distance_to(&drones[j].state.position)
+                    < 1.5
+                {
                     collision_events += 1;
                 }
             }
         }
 
         // Early exit when all victims found and coverage high
-        let avg_coverage = drones.iter().map(|d| d.probability_grid.coverage_pct()).sum::<f64>()
+        let avg_coverage = drones
+            .iter()
+            .map(|d| d.probability_grid.coverage_pct())
+            .sum::<f64>()
             / drones.len() as f64;
         if confirmed_victims.len() >= victims_total && avg_coverage > 0.5 {
             break;
@@ -356,12 +379,18 @@ pub async fn run_mission_with_report(
     }
 
     let elapsed = drones[0].stats.elapsed_secs;
-    let avg_coverage =
-        drones.iter().map(|d| d.probability_grid.coverage_pct()).sum::<f64>() / drones.len() as f64;
+    let avg_coverage = drones
+        .iter()
+        .map(|d| d.probability_grid.coverage_pct())
+        .sum::<f64>()
+        / drones.len() as f64;
     let mean_err = if confirmed_victims.is_empty() {
         0.0
     } else {
-        confirmed_victims.iter().map(|v| v.localization_error_m).sum::<f64>()
+        confirmed_victims
+            .iter()
+            .map(|v| v.localization_error_m)
+            .sum::<f64>()
             / confirmed_victims.len() as f64
     };
 
@@ -400,9 +429,21 @@ pub async fn run_inspection_mission() -> MissionReport {
     let cfg = SwarmConfig::inspection_default();
     // Inspection targets along a power-line corridor
     let targets = vec![
-        Position3D { x: 100.0, y: 25.0, z: 0.0 },
-        Position3D { x: 500.0, y: 25.0, z: 0.0 },
-        Position3D { x: 900.0, y: 25.0, z: 0.0 },
+        Position3D {
+            x: 100.0,
+            y: 25.0,
+            z: 0.0,
+        },
+        Position3D {
+            x: 500.0,
+            y: 25.0,
+            z: 0.0,
+        },
+        Position3D {
+            x: 900.0,
+            y: 25.0,
+            z: 0.0,
+        },
     ];
     run_mission_with_report(cfg, 4, targets, 200, 1.0).await
 }
@@ -410,7 +451,11 @@ pub async fn run_inspection_mission() -> MissionReport {
 /// Underground mine mission (GPS-denied, slow, small swarm).
 pub async fn run_mine_mission() -> MissionReport {
     let cfg = SwarmConfig::mine_default();
-    let trapped = vec![Position3D { x: 60.0, y: 30.0, z: 0.0 }];
+    let trapped = vec![Position3D {
+        x: 60.0,
+        y: 30.0,
+        z: 0.0,
+    }];
     run_mission_with_report(cfg, 2, trapped, 200, 1.0).await
 }
 
@@ -423,7 +468,10 @@ mod tests {
         // Quick smoke test: 20 steps at 0.5 s each = 10 simulated seconds.
         let result = run_sar_simulation(4, 20, 0.5).await;
         assert!(result.elapsed_secs > 0.0, "simulation should advance time");
-        assert_eq!(result.collision_events, 0, "no collisions with proper spacing");
+        assert_eq!(
+            result.collision_events, 0,
+            "no collisions with proper spacing"
+        );
     }
 
     #[tokio::test]
@@ -449,8 +497,16 @@ mod tests {
     async fn test_mission_report_sar() {
         let cfg = SwarmConfig::wi2sar_reference();
         let victims = vec![
-            Position3D { x: 80.0, y: 120.0, z: 0.0 },
-            Position3D { x: 250.0, y: 180.0, z: 0.0 },
+            Position3D {
+                x: 80.0,
+                y: 120.0,
+                z: 0.0,
+            },
+            Position3D {
+                x: 250.0,
+                y: 180.0,
+                z: 0.0,
+            },
         ];
         let report = run_mission_with_report(cfg, 4, victims, 200, 1.0).await;
         assert_eq!(report.profile, "sar");

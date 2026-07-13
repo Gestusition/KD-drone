@@ -144,8 +144,7 @@ impl CandleTrainer {
         for t in (0..n).rev() {
             let next_value = if t + 1 < n { values[t + 1] } else { 0.0 };
             let next_nonterminal = if dones[t] { 0.0 } else { 1.0 };
-            let delta =
-                rewards[t] + self.config.gamma * next_value * next_nonterminal - values[t];
+            let delta = rewards[t] + self.config.gamma * next_value * next_nonterminal - values[t];
             gae = delta + self.config.gamma * self.config.gae_lambda * next_nonterminal * gae;
             advantages[t] = gae;
             returns[t] = gae + values[t];
@@ -191,8 +190,8 @@ impl CandleTrainer {
             // the optimizer runs an actual backward pass over the network.
             let surrogate = adv_t.mul(&pred_action)?.mean_all()?;
             let policy_loss = surrogate.neg()?;
-            let total = (policy_loss.clone()
-                + value_loss.affine(self.config.value_coeff as f64, 0.0)?)?;
+            let total =
+                (policy_loss.clone() + value_loss.affine(self.config.value_coeff as f64, 0.0)?)?;
             self.optimizer.backward_step(&total)?;
             last = (
                 policy_loss.to_scalar::<f32>().unwrap_or(0.0),
@@ -234,7 +233,11 @@ mod tests {
         assert_eq!(adv.len(), 3);
         assert_eq!(ret.len(), 3);
         // Last step terminal → advantage == reward (no bootstrap).
-        assert!((adv[2] - 1.0).abs() < 1e-5, "terminal advantage = reward, got {}", adv[2]);
+        assert!(
+            (adv[2] - 1.0).abs() < 1e-5,
+            "terminal advantage = reward, got {}",
+            adv[2]
+        );
     }
 
     #[test]

@@ -107,20 +107,35 @@ impl RrtApfPlanner {
                 let mut current_idx = tree.len() - 1;
                 while current_idx != 0 {
                     let (pos, parent) = tree[current_idx];
-                    path.push(Waypoint { position: pos, speed_ms: 5.0 });
+                    path.push(Waypoint {
+                        position: pos,
+                        speed_ms: 5.0,
+                    });
                     current_idx = parent;
                 }
-                path.push(Waypoint { position: start, speed_ms: 5.0 });
+                path.push(Waypoint {
+                    position: start,
+                    speed_ms: 5.0,
+                });
                 path.reverse();
-                path.push(Waypoint { position: goal, speed_ms: 2.0 });
+                path.push(Waypoint {
+                    position: goal,
+                    speed_ms: 2.0,
+                });
                 return path;
             }
         }
 
         // Fallback: direct line
         vec![
-            Waypoint { position: start, speed_ms: 5.0 },
-            Waypoint { position: goal, speed_ms: 5.0 },
+            Waypoint {
+                position: start,
+                speed_ms: 5.0,
+            },
+            Waypoint {
+                position: goal,
+                speed_ms: 5.0,
+            },
         ]
     }
 }
@@ -132,8 +147,16 @@ mod tests {
     #[test]
     fn test_plan_returns_at_least_two_waypoints() {
         let planner = RrtApfPlanner::new(3.0);
-        let start = Position3D { x: 0.0, y: 0.0, z: -30.0 };
-        let goal = Position3D { x: 50.0, y: 50.0, z: -30.0 };
+        let start = Position3D {
+            x: 0.0,
+            y: 0.0,
+            z: -30.0,
+        };
+        let goal = Position3D {
+            x: 50.0,
+            y: 50.0,
+            z: -30.0,
+        };
         let mut rng = rand::thread_rng();
         let path = planner.plan(start, goal, 500, &mut rng);
         assert!(path.len() >= 2);
@@ -142,11 +165,19 @@ mod tests {
     #[test]
     fn test_apf_force_pushes_away() {
         let planner = RrtApfPlanner {
-            obstacle_cells: vec![Position3D { x: 1.0, y: 0.0, z: 0.0 }],
+            obstacle_cells: vec![Position3D {
+                x: 1.0,
+                y: 0.0,
+                z: 0.0,
+            }],
             apf_repulsion_dist: 5.0,
             step_size_m: 2.0,
         };
-        let pos = Position3D { x: 0.0, y: 0.0, z: 0.0 };
+        let pos = Position3D {
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+        };
         let (fx, _, _) = planner.apf_force(&pos, &[]);
         assert!(fx < 0.0); // pushed away from x=1 obstacle
     }
@@ -154,24 +185,46 @@ mod tests {
     #[test]
     fn test_plan_reaches_goal() {
         let planner = RrtApfPlanner::new(3.0);
-        let start = Position3D { x: 0.0, y: 0.0, z: -30.0 };
-        let goal  = Position3D { x: 50.0, y: 50.0, z: -30.0 };
+        let start = Position3D {
+            x: 0.0,
+            y: 0.0,
+            z: -30.0,
+        };
+        let goal = Position3D {
+            x: 50.0,
+            y: 50.0,
+            z: -30.0,
+        };
         let mut rng = rand::thread_rng();
         let path = planner.plan(start, goal, 500, &mut rng);
         let last = path.last().unwrap();
         // The RRT either reaches goal directly or the fallback end is the goal itself.
-        assert!(last.position.distance_to(&goal) < 10.0, "path should end near goal");
+        assert!(
+            last.position.distance_to(&goal) < 10.0,
+            "path should end near goal"
+        );
     }
 
     #[test]
     fn test_apf_repulsion_nonzero_near_obstacle() {
         let planner = RrtApfPlanner {
-            obstacle_cells: vec![Position3D { x: 3.0, y: 0.0, z: 0.0 }],
+            obstacle_cells: vec![Position3D {
+                x: 3.0,
+                y: 0.0,
+                z: 0.0,
+            }],
             apf_repulsion_dist: 5.0,
             step_size_m: 2.0,
         };
-        let pos = Position3D { x: 0.0, y: 0.0, z: 0.0 };
+        let pos = Position3D {
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+        };
         let (fx, _, _) = planner.apf_force(&pos, &[]);
-        assert!(fx < 0.0, "repulsion should push away from obstacle (negative x)");
+        assert!(
+            fx < 0.0,
+            "repulsion should push away from obstacle (negative x)"
+        );
     }
 }

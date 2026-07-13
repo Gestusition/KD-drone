@@ -46,7 +46,9 @@ impl TelemetryRecorder {
     /// Open a telemetry file for writing.
     pub fn create<P: AsRef<Path>>(path: P) -> std::io::Result<Self> {
         let file = File::create(path)?;
-        Ok(Self { writer: BufWriter::new(file) })
+        Ok(Self {
+            writer: BufWriter::new(file),
+        })
     }
 
     /// Write the one-time mission metadata header.
@@ -126,7 +128,9 @@ impl TelemetryRecorder {
 
 /// Strip characters that would break the flat JSON string field.
 fn sanitize(s: &str) -> String {
-    s.chars().filter(|c| *c != '"' && *c != '\\' && *c != '\n').collect()
+    s.chars()
+        .filter(|c| *c != '"' && *c != '\\' && *c != '\n')
+        .collect()
 }
 
 #[cfg(test)]
@@ -143,11 +147,25 @@ mod tests {
         let path = tmp_path("ruview_telemetry_test.jsonl");
         {
             let mut rec = TelemetryRecorder::create(&path).unwrap();
-            rec.meta("sar", 2, 400.0, 400.0, &[Position3D { x: 80.0, y: 120.0, z: 0.0 }])
-                .unwrap();
+            rec.meta(
+                "sar",
+                2,
+                400.0,
+                400.0,
+                &[Position3D {
+                    x: 80.0,
+                    y: 120.0,
+                    z: 0.0,
+                }],
+            )
+            .unwrap();
             let state = DroneState {
                 id: NodeId(0),
-                position: Position3D { x: 10.5, y: 20.25, z: -30.0 },
+                position: Position3D {
+                    x: 10.5,
+                    y: 20.25,
+                    z: -30.0,
+                },
                 velocity: Velocity3D::default(),
                 heading_rad: 1.57,
                 altitude_agl_m: 30.0,

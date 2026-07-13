@@ -3,9 +3,9 @@ use super::observation::LocalObservation;
 /// Action output from the MAPPO actor.
 #[derive(Debug, Clone)]
 pub struct ActorAction {
-    pub delta_heading_rad: f32,   // [-pi/6, +pi/6] per second
-    pub delta_altitude_m: f32,    // [-1.0, +1.0] m per second
-    pub speed_ms: f32,            // [0.0, 8.0] m/s
+    pub delta_heading_rad: f32, // [-pi/6, +pi/6] per second
+    pub delta_altitude_m: f32,  // [-1.0, +1.0] m per second
+    pub speed_ms: f32,          // [0.0, 8.0] m/s
     pub trigger_csi_scan: bool,
 }
 
@@ -34,19 +34,31 @@ impl Default for ActorConfig {
 // ---------------------------------------------------------------------------
 
 #[inline]
-fn relu(x: f32) -> f32 { x.max(0.0) }
+fn relu(x: f32) -> f32 {
+    x.max(0.0)
+}
 
 #[inline]
-fn tanh_f32(x: f32) -> f32 { x.tanh() }
+fn tanh_f32(x: f32) -> f32 {
+    x.tanh()
+}
 
 #[inline]
-fn sigmoid(x: f32) -> f32 { 1.0 / (1.0 + (-x).exp()) }
+fn sigmoid(x: f32) -> f32 {
+    1.0 / (1.0 + (-x).exp())
+}
 
 fn matmul_vec(weights: &[Vec<f32>], input: &[f32], bias: &[f32]) -> Vec<f32> {
     weights
         .iter()
         .zip(bias.iter())
-        .map(|(row, b)| row.iter().zip(input.iter()).map(|(w, x)| w * x).sum::<f32>() + b)
+        .map(|(row, b)| {
+            row.iter()
+                .zip(input.iter())
+                .map(|(w, x)| w * x)
+                .sum::<f32>()
+                + b
+        })
         .collect()
 }
 
@@ -100,23 +112,35 @@ impl MappoActor {
             .collect();
         let b_out = vec![0.0f32; 4];
 
-        Self { config, w1, b1, w2, b2, w_out, b_out }
+        Self {
+            config,
+            w1,
+            b1,
+            w2,
+            b2,
+            w_out,
+            b_out,
+        }
     }
 
     /// Forward pass: observation -> action.
     pub fn forward(&self, obs: &LocalObservation) -> ActorAction {
         let input = obs.to_vec();
         let h1: Vec<f32> = matmul_vec(&self.w1, &input, &self.b1)
-            .into_iter().map(relu).collect();
+            .into_iter()
+            .map(relu)
+            .collect();
         let h2: Vec<f32> = matmul_vec(&self.w2, &h1, &self.b2)
-            .into_iter().map(relu).collect();
+            .into_iter()
+            .map(relu)
+            .collect();
         let out = matmul_vec(&self.w_out, &h2, &self.b_out);
 
         ActorAction {
             delta_heading_rad: tanh_f32(out[0]) * self.config.max_heading_delta_rad,
-            delta_altitude_m:  tanh_f32(out[1]) * self.config.max_altitude_delta_m,
-            speed_ms:          sigmoid(out[2]) * self.config.max_speed_ms,
-            trigger_csi_scan:  sigmoid(out[3]) > 0.5,
+            delta_altitude_m: tanh_f32(out[1]) * self.config.max_altitude_delta_m,
+            speed_ms: sigmoid(out[2]) * self.config.max_speed_ms,
+            trigger_csi_scan: sigmoid(out[3]) > 0.5,
         }
     }
 }
@@ -191,6 +215,11 @@ mod tests {
         let elapsed = start.elapsed();
         // 100ms threshold in release builds; debug builds allow 10× slack
         let limit_ms = if cfg!(debug_assertions) { 1000 } else { 100 };
-        assert!(elapsed.as_millis() < limit_ms, "1000 inferences took {}ms, limit {}ms", elapsed.as_millis(), limit_ms);
+        assert!(
+            elapsed.as_millis() < limit_ms,
+            "1000 inferences took {}ms, limit {}ms",
+            elapsed.as_millis(),
+            limit_ms
+        );
     }
 }

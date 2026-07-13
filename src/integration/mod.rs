@@ -9,7 +9,7 @@ pub use mission_report::{MissionReport, SotaComparison, VictimReport};
 pub use telemetry::{DroneFrame, TelemetryRecorder};
 
 pub use mavlink_messages::{
-    SwarmNodeState, SwarmCsiReport, SwarmClusterHeartbeat, SwarmVictimConfirmed, SwarmMsgId,
+    SwarmClusterHeartbeat, SwarmCsiReport, SwarmMsgId, SwarmNodeState, SwarmVictimConfirmed,
 };
 
 pub mod flight_controller;

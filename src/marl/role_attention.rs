@@ -35,7 +35,10 @@ pub struct RoleAttention {
 
 impl Default for RoleAttention {
     fn default() -> Self {
-        Self { relay_floor: 0.05, temperature: 1.0 }
+        Self {
+            relay_floor: 0.05,
+            temperature: 1.0,
+        }
     }
 }
 
@@ -75,10 +78,12 @@ impl RoleAttention {
     /// Role-segmented attention: separate sensor-pool and relay-pool so a flat
     /// softmax over k-nearest (mostly same-role) doesn't break.
     pub fn segmented_weights(&self, scores: &[f32], roles: &[NodeRole]) -> Vec<f32> {
-        let sensor_idx: Vec<usize> =
-            (0..roles.len()).filter(|&i| roles[i] != NodeRole::Relay).collect();
-        let relay_idx: Vec<usize> =
-            (0..roles.len()).filter(|&i| roles[i] == NodeRole::Relay).collect();
+        let sensor_idx: Vec<usize> = (0..roles.len())
+            .filter(|&i| roles[i] != NodeRole::Relay)
+            .collect();
+        let relay_idx: Vec<usize> = (0..roles.len())
+            .filter(|&i| roles[i] == NodeRole::Relay)
+            .collect();
         let mut out = vec![0.0f32; scores.len()];
         // Each pool gets a fixed share of the attention mass (if both populated).
         let pools = [(&sensor_idx, 0.6f32), (&relay_idx, 0.4f32)];
@@ -129,14 +134,21 @@ mod tests {
 
     #[test]
     fn test_relay_floor_prevents_collapse() {
-        let attn = RoleAttention { relay_floor: 0.1, temperature: 1.0 };
+        let attn = RoleAttention {
+            relay_floor: 0.1,
+            temperature: 1.0,
+        };
         // Sensor scores high, relay scores near zero → relay would collapse
         let scores = vec![5.0, 5.0, -10.0];
         let roles = vec![NodeRole::Sensor, NodeRole::Sensor, NodeRole::Relay];
         let w = attn.weights(&scores, &roles);
         assert!(w[2] >= 0.09, "relay weight {} should respect floor", w[2]);
         let sum: f32 = w.iter().sum();
-        assert!((sum - 1.0).abs() < 1e-4, "weights must sum to 1, got {}", sum);
+        assert!(
+            (sum - 1.0).abs() < 1e-4,
+            "weights must sum to 1, got {}",
+            sum
+        );
     }
 
     #[test]
@@ -146,7 +158,11 @@ mod tests {
         let roles = vec![NodeRole::Sensor, NodeRole::Sensor, NodeRole::Relay];
         let w = attn.segmented_weights(&scores, &roles);
         let relay_mass = w[2];
-        assert!(relay_mass > 0.3 && relay_mass < 0.5, "relay pool ~0.4 mass, got {}", relay_mass);
+        assert!(
+            relay_mass > 0.3 && relay_mass < 0.5,
+            "relay pool ~0.4 mass, got {}",
+            relay_mass
+        );
     }
 
     #[test]

@@ -18,11 +18,7 @@ pub enum FlightMode {
 /// Abstraction over flight controller interfaces (PX4, ArduPilot, custom).
 #[async_trait]
 pub trait FlightController: Send + Sync {
-    async fn set_target_position(
-        &self,
-        pos: &Position3D,
-        speed_ms: f64,
-    ) -> crate::SwarmResult<()>;
+    async fn set_target_position(&self, pos: &Position3D, speed_ms: f64) -> crate::SwarmResult<()>;
 
     async fn get_state(&self) -> crate::SwarmResult<DroneState>;
 
@@ -101,7 +97,11 @@ mod tests {
     #[tokio::test]
     async fn test_set_position_updates_state() {
         let fc = SimulatedFlightController::new(NodeId(0));
-        let target = Position3D { x: 50.0, y: 30.0, z: -20.0 };
+        let target = Position3D {
+            x: 50.0,
+            y: 30.0,
+            z: -20.0,
+        };
         fc.set_target_position(&target, 5.0).await.unwrap();
         let state = fc.get_state().await.unwrap();
         assert!((state.position.x - 50.0).abs() < 1e-6);
@@ -112,7 +112,11 @@ mod tests {
     async fn test_rtl_returns_to_origin() {
         let fc = SimulatedFlightController::new(NodeId(1));
         fc.set_target_position(
-            &Position3D { x: 100.0, y: 100.0, z: -30.0 },
+            &Position3D {
+                x: 100.0,
+                y: 100.0,
+                z: -30.0,
+            },
             5.0,
         )
         .await
