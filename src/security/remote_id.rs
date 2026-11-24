@@ -13,6 +13,15 @@
 use crate::types::DroneState;
 use serde::{Deserialize, Serialize};
 
+/// F3411 message type for Basic ID.
+const MSG_TYPE_BASIC_ID: u8 = 0x0;
+/// F3411 protocol version 2 (F3411-22a).
+const PROTOCOL_VERSION: u8 = 0x2;
+/// F3411 ID type: serial number (ANSI/CTA-2063-A).
+const ID_TYPE_SERIAL_NUMBER: u8 = 0x1;
+/// F3411 UA type: helicopter or multirotor.
+const UA_TYPE_HELICOPTER_OR_MULTIROTOR: u8 = 0x2;
+
 /// Remote ID broadcast state for one drone.
 ///
 /// Drone position is stored as **NED metres** (`drone_north_m` / `drone_east_m`)
@@ -75,11 +84,16 @@ impl RemoteIdBroadcast {
     }
 
     /// Encode a 25-byte ASTM F3411 Basic ID message.
-    /// Format: [message_type(1)] [id_type(1)] [uas_id(20)] [reserved(3)]
+    ///
+    /// Layout (F3411-22a):
+    /// - byte 0: message type (high nibble, 0x0 = Basic ID) | protocol version (low nibble)
+    /// - byte 1: ID type (high nibble) | UA type (low nibble)
+    /// - bytes 2..22: UAS ID (20 bytes, NUL-padded)
+    /// - bytes 22..25: reserved
     pub fn encode_basic_id(&self) -> [u8; 25] {
         let mut buf = [0u8; 25];
-        buf[0] = 0x00; // Message type: Basic ID
-        buf[1] = 0x01; // ID type: Serial Number
+        buf[0] = (MSG_TYPE_BASIC_ID << 4) | PROTOCOL_VERSION;
+        buf[1] = (ID_TYPE_SERIAL_NUMBER << 4) | UA_TYPE_HELICOPTER_OR_MULTIROTOR;
         buf[2..22].copy_from_slice(&self.uas_id);
         // bytes 22-24: reserved
         buf
@@ -95,7 +109,22 @@ mod tests {
         let rid = RemoteIdBroadcast::new([0x41u8; 20]);
         let buf = rid.encode_basic_id();
         assert_eq!(buf.len(), 25);
-        assert_eq!(buf[1], 0x01); // ID type: serial number
+        assert_eq!(buf[0], 0x02); // Basic ID, protocol version 2
+        assert_eq!(buf[1], 0x12); // ID type: serial number, UA type: multirotor
+    }
+
+    /// Byte 1 packs ID type (high nibble) and UA type (low nibble). Writing
+    /// 0x01 there declared "no ID, aeroplane" (reported in PR #1).
+    #[test]
+    fn test_basic_id_header_nibbles() {
+        let rid = RemoteIdBroadcast::new(*b"1581F5FKD229400B5LTL");
+        let buf = rid.encode_basic_id();
+        assert_eq!(buf[0] >> 4, 0x0, "message type must be Basic ID");
+        assert_eq!(buf[0] & 0x0F, 0x2, "protocol version");
+        assert_eq!(buf[1] >> 4, 0x1, "ID type must be serial number");
+        assert_eq!(buf[1] & 0x0F, 0x2, "UA type must be helicopter/multirotor");
+        assert_eq!(&buf[2..22], b"1581F5FKD229400B5LTL");
+        assert_eq!(&buf[22..25], &[0u8; 3]);
     }
 
     #[test]
